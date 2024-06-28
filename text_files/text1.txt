@@ -1,0 +1,4 @@
+Extremely Simple Strategy
+To build a neural network, researchers first specify its size and layout, then set all its parameters to random values.
+Then, training. Every time the network sees a new input, it spits out an output and then tweaks its parameters toward values that will produce a better output.
+The difficulty in understanding the training process. Without a clear picture of the topography of this vast landscape, it’s hard to understand why the network ends up with a particular set of parameters.
