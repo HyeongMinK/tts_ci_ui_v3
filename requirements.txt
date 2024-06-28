@@ -1,5 +1,5 @@
 librosa
-numpy==1.21.0
+numpy==1.17.1
 opencv-contrib-python
 opencv-python
 torch
