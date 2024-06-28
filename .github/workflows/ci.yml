@@ -27,8 +27,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install FFmpeg
+    - name: Install ffmpeg
       run: sudo apt-get install ffmpeg
+
+    - name: Download Wav2Lip checkpoint
+      run: |
+        pip install gdown
+        gdown --id 1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T -O checkpoints/wav2lip_gan.pth
 
     - name: Run inference script
       run: python inference_for_ci.py --checkpoint_path checkpoints/wav2lip_gan.pth --face pic_files/pic.png
