@@ -31,6 +31,6 @@ jobs:
       run: sudo apt-get install ffmpeg
 
     - name: Run inference script
-      run: python inference_v2.py --checkpoint_path checkpoints/wav2lip_gan.pth --face path/to/your/image.png
+      run: python inference_for_ci.py --checkpoint_path checkpoints/wav2lip_gan.pth --face path/to/your/image.png
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
