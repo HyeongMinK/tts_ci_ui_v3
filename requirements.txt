@@ -1,5 +1,5 @@
 librosa
-numpy
+numpy==1.21.0
 opencv-contrib-python
 opencv-python
 torch
@@ -7,3 +7,4 @@ torchvision
 tqdm
 numba
 openai
+soxr
