@@ -1,4 +1,4 @@
-name: Wav2Lip TTS2LipSync CI
+name: CI Pipeline
 
 on:
   push:
@@ -13,25 +13,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Check out repository code
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Install FFmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+      run: sudo apt-get install ffmpeg
 
-    - name: Run inference
+    - name: Run inference script
+      run: python inference_for_ci.py --checkpoint_path checkpoints/wav2lip_gan.pth --face path/to/your/image.png
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      run: |
-        python inference_for_ci.py --checkpoint_path checkpoints/wav2lip_gan.pth --face pic_files/pic.png
