@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import subprocess
 import gdown
+import argparse
 # 시스템 패키지 설치 (ffmpeg 및 libGL 등)
 def install_ffmpeg_and_libgl():
     st.info('Installing ffmpeg and libgl...')
