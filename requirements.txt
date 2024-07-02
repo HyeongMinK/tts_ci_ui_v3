@@ -1,7 +1,6 @@
 librosa
 numpy==1.26.2
-opencv-contrib-python
-opencv-python
+opencv-python-headless
 torch
 torchvision
 tqdm
