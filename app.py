@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import numpy as np
-import scipy
+
 import cv2
 import json
 import random
