@@ -9,3 +9,4 @@ numba
 openai
 soxr
 gdown
+streamlit
