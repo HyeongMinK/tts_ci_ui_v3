@@ -12,7 +12,6 @@ from tqdm import tqdm
 import platform
 from openai import OpenAI
 from models import Wav2Lip
-import face_detection
 import audio
 
 # 시스템 패키지 설치 (ffmpeg 및 libGL 등)
@@ -36,6 +35,7 @@ def download_checkpoint():
 install_ffmpeg_and_libgl()
 
 import cv2
+import face_detection
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
