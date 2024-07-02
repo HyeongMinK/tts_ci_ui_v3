@@ -1,17 +1,29 @@
 import streamlit as st
 import os
 import subprocess
-import sys
-sys.path.append('/home/appuser/.local/lib/python3.11/site-packages')
-# pip로 패키지를 설치하는 함수
-def install_pip_packages():
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-    except subprocess.CalledProcessError as e:
-        st.error(f"Failed to install packages: {e}")
 
-# pip 패키지 설치
-install_pip_packages()
+# 시스템 패키지 설치 (ffmpeg 및 libGL 등)
+def install_ffmpeg_and_libgl():
+    st.info('Installing ffmpeg and libgl...')
+    os.system('chmod +x setup.sh')
+    os.system('./setup.sh')
+    st.success('ffmpeg and libgl installed.')
+
+# 모델 체크포인트 다운로드 함수
+def download_checkpoint():
+    import gdown
+    checkpoint_path = 'checkpoints/wav2lip_gan.pth'
+    if not os.path.exists(checkpoint_path):
+        st.info('Downloading model checkpoint...')
+        url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
+        gdown.download(url, checkpoint_path, quiet=False)
+        st.success('Model checkpoint downloaded.')
+
+# ffmpeg 및 libGL 설치
+install_ffmpeg_and_libgl()
+
+# Streamlit 애플리케이션 시작 시 체크포인트 다운로드
+download_checkpoint()
 
 # 필요한 모듈 import
 try:
@@ -30,19 +42,6 @@ try:
     import audio
 except ImportError as e:
     st.error(f"Failed to import module: {e}")
-
-# 모델 체크포인트 다운로드 함수
-def download_checkpoint():
-    import gdown
-    checkpoint_path = 'checkpoints/wav2lip_gan.pth'
-    if not os.path.exists(checkpoint_path):
-        st.info('Downloading model checkpoint...')
-        url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
-        gdown.download(url, checkpoint_path, quiet=False)
-        st.success('Model checkpoint downloaded.')
-
-# Streamlit 애플리케이션 시작 시 체크포인트 다운로드
-download_checkpoint()
 
 # 환경 변수에서 OpenAI API 키 가져오기
 openai_api_key = st.secrets["OPENAI_API_KEY"]
