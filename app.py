@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import subprocess
+import sys
 
 # pip로 패키지를 설치하는 함수
 def install_pip_packages():
