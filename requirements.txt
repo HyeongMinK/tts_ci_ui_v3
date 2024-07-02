@@ -10,3 +10,4 @@ openai
 soxr
 gdown
 streamlit
+scipy
