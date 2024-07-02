@@ -16,13 +16,13 @@ from models import Wav2Lip
 import face_detection
 import audio
 
-# 시스템 패키지 설치 (ffmpeg 등)
-def install_ffmpeg():
-    if not os.path.isfile('/usr/bin/ffmpeg'):
-        st.info('Installing ffmpeg...')
+# 시스템 패키지 설치 (ffmpeg 및 libGL 등)
+def install_ffmpeg_and_libgl():
+    if not os.path.isfile('/usr/bin/ffmpeg') or not os.path.isfile('/usr/lib/x86_64-linux-gnu/libGL.so.1'):
+        st.info('Installing ffmpeg and libgl...')
         os.system('chmod +x setup.sh')
         os.system('./setup.sh')
-        st.success('ffmpeg installed.')
+        st.success('ffmpeg and libgl installed.')
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -33,8 +33,8 @@ def download_checkpoint():
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
 
-# ffmpeg 설치
-install_ffmpeg()
+# 시스템 패키지 설치 (ffmpeg 및 libGL 등)
+install_ffmpeg_and_libgl()
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
