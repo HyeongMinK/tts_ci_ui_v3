@@ -19,7 +19,7 @@ def download_checkpoint():
         st.success('Model checkpoint downloaded.')
 
 # ffmpeg 및 libGL 설치
-install_ffmpeg_and_libgl()
+#install_ffmpeg_and_libgl()
 
 
 # 필요한 모듈 import
