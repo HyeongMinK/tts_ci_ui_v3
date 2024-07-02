@@ -2,10 +2,12 @@ import streamlit as st
 import os
 import gdown
 import numpy as np
-import cv2
-import torch
+import scipy, cv2, audio
+import subprocess
+import torch, face_detection
 from models import Wav2Lip
 from openai import OpenAI
+import logging
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
