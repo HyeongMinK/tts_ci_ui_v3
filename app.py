@@ -4,7 +4,6 @@ import subprocess
 import gdown
 import numpy as np
 import scipy
-import cv2
 import json
 import random
 import string
@@ -35,6 +34,8 @@ def download_checkpoint():
 
 # 시스템 패키지 설치 (ffmpeg 및 libGL 등)
 install_ffmpeg_and_libgl()
+
+import cv2
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
