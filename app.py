@@ -1,18 +1,34 @@
 import streamlit as st
 import os
-import numpy as np
+import subprocess
 
-import cv2
-import json
-import random
-import string
-import torch
-from tqdm import tqdm
-import platform
-from openai import OpenAI
-from models import Wav2Lip
-import face_detection
-import audio
+# pip로 패키지를 설치하는 함수
+def install_pip_packages():
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    except subprocess.CalledProcessError as e:
+        st.error(f"Failed to install packages: {e}")
+
+# pip 패키지 설치
+install_pip_packages()
+
+# 필요한 모듈 import
+try:
+    import numpy as np
+    import scipy
+    import cv2
+    import json
+    import random
+    import string
+    import torch
+    from tqdm import tqdm
+    import platform
+    from openai import OpenAI
+    from models import Wav2Lip
+    import face_detection
+    import audio
+except ImportError as e:
+    st.error(f"Failed to import module: {e}")
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
