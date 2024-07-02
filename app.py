@@ -6,11 +6,6 @@ import cv2
 import torch
 from models import Wav2Lip
 from openai import OpenAI
-import logging
-
-# 로그 설정
-logging.basicConfig(level=logging.INFO, filename='app.log', filemode='a',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -18,20 +13,10 @@ def download_checkpoint():
     if not os.path.exists(checkpoint_path):
         st.info('Downloading model checkpoint...')
         url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
-        try:
-            gdown.download(url, checkpoint_path, quiet=True)
-            st.success('Model checkpoint downloaded.')
-        except Exception as e:
-            logging.error(f"Error downloading model checkpoint: {e}")
-            st.error("Failed to download the model checkpoint. Check logs for more details.")
+        gdown.download(url, checkpoint_path, quiet=False)
+        st.success('Model checkpoint downloaded.')
 
-# Streamlit 애플리케이션 시작 시 체크포인트 다운로드
-download_checkpoint()
-
-# Streamlit 애플리케이션 코드
-st.title("Wav2Lip Demo")
-st.write("Hello, world!")
-
+# TTS 함수
 def text_to_speech(client, text, output_audio_path):
     response = client.audio.speech.create(
         model="tts-1",
@@ -39,8 +24,9 @@ def text_to_speech(client, text, output_audio_path):
         input=text
     )
     response.stream_to_file(output_audio_path)
-    print(f"Audio file saved at {output_audio_path}")
+    st.write(f"Audio file saved at {output_audio_path}")
 
+# TTS 파일 생성 함수
 def create_tts_files(api_key):
     client = OpenAI(api_key=api_key)
     
@@ -48,11 +34,9 @@ def create_tts_files(api_key):
     audio_dir = os.path.join(current_dir, "audio_files")
     text_dir = os.path.join(current_dir, "text_files")
     
-    # audio_files 폴더가 없으면 생성
     if not os.path.exists(audio_dir):
         os.makedirs(audio_dir)
     
-    # text_files 폴더의 모든 텍스트 파일에 대해 TTS 수행
     for text_file_name in os.listdir(text_dir):
         text_file_path = os.path.join(text_dir, text_file_name)
         with open(text_file_path, "r", encoding="utf-8") as text_file:
@@ -61,9 +45,10 @@ def create_tts_files(api_key):
         output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(text_file_name)[0]}.wav")
         text_to_speech(client, text, output_audio_path)
 
+# Wav2Lip 모델 로드 함수
 def load_model(checkpoint_path):
     model = Wav2Lip()
-    print("Load checkpoint from: {}".format(checkpoint_path))
+    st.write("Load checkpoint from: {}".format(checkpoint_path))
     checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
     s = checkpoint["state_dict"]
     new_s = {}
@@ -72,6 +57,7 @@ def load_model(checkpoint_path):
     model.load_state_dict(new_s)
     return model.eval()
 
+# 메인 함수
 def main():
     face = 'pic_files/pic.png'
     checkpoint_path = 'checkpoints/wav2lip_gan.pth'
@@ -81,13 +67,10 @@ def main():
     elif face.split('.')[1] in ['jpg', 'png', 'jpeg']:
         full_frames = [cv2.imread(face)]
         fps = 25
-
     else:
         video_stream = cv2.VideoCapture(face)
         fps = video_stream.get(cv2.CAP_PROP_FPS)
-
-        print('Reading video frames...')
-
+        st.write('Reading video frames...')
         full_frames = []
         while True:
             still_reading, frame = video_stream.read()
@@ -97,22 +80,19 @@ def main():
             frame = cv2.resize(frame, (frame.shape[1]//2, frame.shape[0]//2))
             full_frames.append(frame)
 
-    print ("Number of frames available for inference: "+str(len(full_frames)))
-
+    st.write("Number of frames available for inference: "+str(len(full_frames)))
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
-    
     model = load_model(checkpoint_path)
 
-    # audio_files 폴더의 모든 오디오 파일에 대해 처리
     for audio_file_name in os.listdir(audio_dir):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
-            print(f'Skipping non-wav file: {audio_file_path}')
+            st.write(f'Skipping non-wav file: {audio_file_path}')
             continue
 
         wav = audio.load_wav(audio_file_path, 16000)
         mel = audio.melspectrogram(wav)
-        print(mel.shape)
+        st.write(mel.shape)
 
         if np.isnan(mel.reshape(-1)).sum() > 0:
             raise ValueError('Mel contains nan! Using a TTS voice? Add a small epsilon noise to the wav file and try again')
@@ -128,28 +108,23 @@ def main():
             mel_chunks.append(mel[:, start_idx : start_idx + 16])
             i += 1
 
-        print("Length of mel chunks: {}".format(len(mel_chunks)))
-
+        st.write("Length of mel chunks: {}".format(len(mel_chunks)))
         full_frames = full_frames[:len(mel_chunks)]
-
         batch_size = 16
         img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
 
         for i, m in enumerate(mel_chunks):
-            idx = 0 if False else i%len(full_frames)
+            idx = 0 if False else i % len(full_frames)
             frame_to_save = full_frames[idx].copy()
             face = cv2.resize(full_frames[idx], (96, 96))
-
             img_batch.append(face)
             mel_batch.append(m)
             frame_batch.append(frame_to_save)
 
             if len(img_batch) >= batch_size:
                 img_batch, mel_batch = np.asarray(img_batch), np.asarray(mel_batch)
-
                 img_masked = img_batch.copy()
                 img_masked[:, 96//2:] = 0
-
                 img_batch = np.concatenate((img_masked, img_batch), axis=3) / 255.
                 mel_batch = np.reshape(mel_batch, [len(mel_batch), mel_batch.shape[1], mel_batch.shape[2], 1])
 
@@ -157,7 +132,6 @@ def main():
                     pred = model(torch.FloatTensor(mel_batch).to('cpu'), torch.FloatTensor(img_batch).to('cpu'))
 
                 pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
-                
                 for p, f in zip(pred, frame_batch):
                     f[48:48+96, 48:48+96] = p
                     # 비디오 저장
@@ -165,13 +139,10 @@ def main():
 
                 img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
 
-        # 나머지 배치 처리
         if len(img_batch) > 0:
             img_batch, mel_batch = np.asarray(img_batch), np.asarray(mel_batch)
-
             img_masked = img_batch.copy()
             img_masked[:, 96//2:] = 0
-
             img_batch = np.concatenate((img_masked, img_batch), axis=3) / 255.
             mel_batch = np.reshape(mel_batch, [len(mel_batch), mel_batch.shape[1], mel_batch.shape[2], 1])
 
@@ -179,15 +150,25 @@ def main():
                 pred = model(torch.FloatTensor(mel_batch).to('cpu'), torch.FloatTensor(img_batch).to('cpu'))
 
             pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
-            
             for p, f in zip(pred, frame_batch):
                 f[48:48+96, 48:48+96] = p
                 # 비디오 저장
                 out.write(f)
 
-if __name__ == '__main__':
-    api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
+st.title("Wav2Lip Demo")
+st.write("Hello, world!")
+
+if st.button("Start Processing"):
+    st.write("Downloading checkpoint...")
+    download_checkpoint()
+
+    st.write("Creating TTS files...")
+    api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
-        raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
-    create_tts_files(api_key)  # TTS 파일 생성 후 Wav2Lip 실행
+        st.error("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
+    else:
+        create_tts_files(api_key)
+
+    st.write("Running Wav2Lip model...")
     main()
+    st.success("Processing complete!")
