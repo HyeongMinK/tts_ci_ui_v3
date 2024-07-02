@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import subprocess
-
+import gdown
 # 시스템 패키지 설치 (ffmpeg 및 libGL 등)
 def install_ffmpeg_and_libgl():
     st.info('Installing ffmpeg and libgl...')
@@ -24,7 +24,6 @@ install_ffmpeg_and_libgl()
 
 # 필요한 모듈 import
 try:
-    import gdown
     import numpy as np
     import scipy
     import cv2
