@@ -8,3 +8,4 @@ tqdm
 numba
 openai
 soxr
+gdown
