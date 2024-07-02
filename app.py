@@ -134,21 +134,21 @@ def datagen(frames, mels):
 
     if args.box[0] == -1:
         if not args.static:
-            face_det_results = face_detect(frames) # BGR2RGB for CNN face detection
+            face_det_results = face_detect(frames)  # BGR2RGB for CNN face detection
         else:
             face_det_results = face_detect([frames[0]])
     else:
         print('Using the specified bounding box instead of face detection...')
         y1, y2, x1, x2 = args.box
-        face_det_results = [[f[y1: y2, x1:x2], (y1, y2, x1:x2)] for f in frames]
+        face_det_results = [[f[y1: y2, x1:x2], (y1, y2, x1, x2)] for f in frames]
 
     for i, m in enumerate(mels):
-        idx = 0 if args.static else i%len(frames)
+        idx = 0 if args.static else i % len(frames)
         frame_to_save = frames[idx].copy()
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
-            
+
         img_batch.append(face)
         mel_batch.append(m)
         frame_batch.append(frame_to_save)
@@ -158,7 +158,7 @@ def datagen(frames, mels):
             img_batch, mel_batch = np.asarray(img_batch), np.asarray(mel_batch)
 
             img_masked = img_batch.copy()
-            img_masked[:, args.img_size//2:] = 0
+            img_masked[:, args.img_size // 2:] = 0
 
             img_batch = np.concatenate((img_masked, img_batch), axis=3) / 255.
             mel_batch = np.reshape(mel_batch, [len(mel_batch), mel_batch.shape[1], mel_batch.shape[2], 1])
@@ -170,7 +170,7 @@ def datagen(frames, mels):
         img_batch, mel_batch = np.asarray(img_batch), np.asarray(mel_batch)
 
         img_masked = img_batch.copy()
-        img_masked[:, args.img_size//2:] = 0
+        img_masked[:, args.img_size // 2:] = 0
 
         img_batch = np.concatenate((img_masked, img_batch), axis=3) / 255.
         mel_batch = np.reshape(mel_batch, [len(mel_batch), mel_batch.shape[1], mel_batch.shape[2], 1])
