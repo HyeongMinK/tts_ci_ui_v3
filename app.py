@@ -1,13 +1,18 @@
 import streamlit as st
 import os
-import subprocess
-
-# 시스템 패키지 설치 (ffmpeg 및 libGL 등)
-def install_ffmpeg_and_libgl():
-    st.info('Installing ffmpeg and libgl...')
-    os.system('chmod +x setup.sh')
-    os.system('./setup.sh')
-    st.success('ffmpeg and libgl installed.')
+import numpy as np
+import scipy
+import cv2
+import json
+import random
+import string
+import torch
+from tqdm import tqdm
+import platform
+from openai import OpenAI
+from models import Wav2Lip
+import face_detection
+import audio
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -19,29 +24,8 @@ def download_checkpoint():
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
 
-# ffmpeg 및 libGL 설치
-install_ffmpeg_and_libgl()
-
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
-
-# 필요한 모듈 import
-try:
-    import numpy as np
-    import scipy
-    import cv2
-    import json
-    import random
-    import string
-    import torch
-    from tqdm import tqdm
-    import platform
-    from openai import OpenAI
-    from models import Wav2Lip
-    import face_detection
-    import audio
-except ImportError as e:
-    st.error(f"Failed to import module: {e}")
 
 # 환경 변수에서 OpenAI API 키 가져오기
 openai_api_key = st.secrets["OPENAI_API_KEY"]
