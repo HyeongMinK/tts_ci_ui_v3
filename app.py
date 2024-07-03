@@ -166,7 +166,7 @@ def datagen(frames, mels):
     else:
         print('Using the specified bounding box instead of face detection...')
         y1, y2, x1, x2 = args.box
-        face_det_results = [[f[y1: y2, x1:x2], (y1, y2, x1, x2)] for f in frames]
+        face_det_results = [[f[y1: y2, x1:x2], (y1, y2, x1:x2)] for f in frames]
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
@@ -352,7 +352,11 @@ if __name__ == '__main__':
     if st.button("Generate Video"):
         create_tts_files(api_key)  # TTS 파일 생성
         result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
+        st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
 
+    # 세션 상태에서 결과 파일 이름을 가져옴
+    if 'result_filenames' in st.session_state:
+        result_filenames = st.session_state.result_filenames
         # 각 결과 파일에 대해 다운로드 버튼 추가
         for result_filename in result_filenames:
             with open(result_filename, "rb") as f:
