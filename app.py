@@ -1,16 +1,17 @@
-from os import listdir, path
+import os
 import numpy as np
-import scipy, cv2, os, sys, argparse, audio
-import json, subprocess, random, string
-from tqdm import tqdm
-from glob import glob
-import torch, face_detection
-from models import Wav2Lip
+import cv2
+import torch
+import subprocess
 import platform
-from openai import OpenAI
 import streamlit as st
 import gdown
-
+from openai import OpenAI
+from tqdm import tqdm
+import face_detection
+from models import Wav2Lip
+import argparse
+import audio
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -20,7 +21,6 @@ def download_checkpoint():
         url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
-
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
@@ -337,6 +337,8 @@ def main():
         command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
         subprocess.call(command, shell=platform.system() != 'Windows')
 
+        return result_filename
+
 if __name__ == '__main__':
     api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
     if not api_key:
@@ -344,5 +346,9 @@ if __name__ == '__main__':
 
     # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
     if st.button("Generate Video"):
-        create_tts_files(api_key)  # TTS 파일 생성 후 Wav2Lip 실행
-        main()
+        create_tts_files(api_key)  # TTS 파일 생성
+        result_filename = main()  # Wav2Lip 실행 및 결과 파일 생성
+
+        # 결과 파일 다운로드 버튼 추가
+        with open(result_filename, "rb") as f:
+            st.download_button(label="Download Video", data=f, file_name=result_filename, mime="video/mp4")
