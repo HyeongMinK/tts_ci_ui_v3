@@ -10,7 +10,7 @@ import platform
 from openai import OpenAI
 import streamlit as st
 import gdown
-
+from zipfile import ZipFile
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -20,7 +20,6 @@ def download_checkpoint():
         url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
-
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
@@ -337,6 +336,12 @@ def main():
         command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
         subprocess.call(command, shell=platform.system() != 'Windows')
 
+def zip_directory(folder_path, zip_path):
+    with ZipFile(zip_path, 'w') as zipf:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), folder_path))
+
 if __name__ == '__main__':
     api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
     if not api_key:
@@ -346,3 +351,27 @@ if __name__ == '__main__':
     if st.button("Generate Video"):
         create_tts_files(api_key)  # TTS 파일 생성 후 Wav2Lip 실행
         main()
+
+    # 결과 폴더를 zip 파일로 압축하여 다운로드 버튼을 추가
+    if st.button("Download Results"):
+        results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+        zip_path = os.path.join(results_dir, "results.zip")
+        zip_directory(results_dir, zip_path)
+        with open(zip_path, "rb") as zip_file:
+            st.download_button(label="Download ZIP", data=zip_file, file_name="results.zip")
+
+    # 오래된 파일을 삭제할 수 있는 버튼 추가
+    if st.button("Clean Up"):
+        audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
+        results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+
+        for folder in [audio_dir, results_dir]:
+            for filename in os.listdir(folder):
+                file_path = os.path.join(folder, filename)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                except Exception as e:
+                    st.error(f"Failed to delete {file_path}. Reason: {e}")
