@@ -266,6 +266,8 @@ def main():
 
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
     
+    result_filenames = []
+    
     # audio_files 폴더의 모든 오디오 파일에 대해 처리
     for audio_file_name in os.listdir(audio_dir):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
@@ -337,7 +339,9 @@ def main():
         command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
         subprocess.call(command, shell=platform.system() != 'Windows')
 
-        return result_filename
+        result_filenames.append(result_filename)
+    
+    return result_filenames
 
 if __name__ == '__main__':
     api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
@@ -347,8 +351,9 @@ if __name__ == '__main__':
     # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
     if st.button("Generate Video"):
         create_tts_files(api_key)  # TTS 파일 생성
-        result_filename = main()  # Wav2Lip 실행 및 결과 파일 생성
+        result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
 
-        # 결과 파일 다운로드 버튼 추가
-        with open(result_filename, "rb") as f:
-            st.download_button(label="Download Video", data=f, file_name=result_filename, mime="video/mp4")
+        # 각 결과 파일에 대해 다운로드 버튼 추가
+        for result_filename in result_filenames:
+            with open(result_filename, "rb") as f:
+                st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
