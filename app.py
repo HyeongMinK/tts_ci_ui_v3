@@ -229,7 +229,8 @@ def load_model(path):
     model = model.to(device)
     return model.eval()
 
-def main():
+def main(face_path):
+    args.face=face_path
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -411,7 +412,7 @@ if __name__ == '__main__':
     # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
     if st.button("Generate Video"):
         create_tts_files(api_key)  # TTS 파일 생성
-        result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
+        result_filenames = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
         st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
 
     # 세션 상태에서 결과 파일 이름을 가져옴
