@@ -12,6 +12,7 @@ import face_detection
 from models import Wav2Lip
 import argparse
 import audio
+from PIL import Image
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -367,6 +368,12 @@ if __name__ == '__main__':
     uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
 
     if uploaded_file is not None:
+	# 폴더 내의 모든 파일 삭제
+        clear_directory("text_files")
+        clear_directory("pic_files")
+        clear_directory("results")
+        clear_directory("audio_files")
+
         # 업로드된 파일을 text_files 폴더에 저장
         save_path = os.path.join("text_files", uploaded_file.name)
         
