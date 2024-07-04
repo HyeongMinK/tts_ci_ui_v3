@@ -283,13 +283,12 @@ def main():
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
     
     result_filenames = []
-
-    # Streamlit 진행률 표시를 위한 위젯 생성
+    
+    total_audio_files = len([name for name in os.listdir(audio_dir) if name.endswith('.wav')])
     progress_bar = st.progress(0)
-    total_audio_files = len(os.listdir(audio_dir))
     
     # audio_files 폴더의 모든 오디오 파일에 대해 처리
-    for audio_file_index, audio_file_name in enumerate(os.listdir(audio_dir)):
+    for idx, audio_file_name in enumerate(os.listdir(audio_dir)):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
             print(f'Skipping non-wav file: {audio_file_path}')
@@ -326,7 +325,7 @@ def main():
         batch_size = args.wav2lip_batch_size
         gen = datagen(full_frames.copy(), mel_chunks)
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(gen): # tqdm 부분 제거
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(gen):
             if i == 0:
                 model = load_model(args.checkpoint_path)
                 print ("Model loaded")
@@ -360,20 +359,22 @@ def main():
 
         result_filenames.append(result_filename)
 
-        # 진행률 업데이트
-        progress_bar.progress((audio_file_index + 1) / total_audio_files)
+        # Update progress bar
+        progress = (idx + 1) / total_audio_files
+        progress_bar.progress(progress)
     
     return result_filenames
 
 if __name__ == '__main__':
-    api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
-# 폴더 내의 모든 파일 삭제
+    # 폴더 내의 모든 파일 삭제
     clear_directory("text_files")
     clear_directory("pic_files")
     clear_directory("results")
     clear_directory("audio_files")
+
+    api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
     # 텍스트 파일 업로드 위젯 추가
     uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
@@ -390,7 +391,7 @@ if __name__ == '__main__':
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getvalue())
         
-        st.success(f"텍스트 파일이 {save_path}에 성공적으로 저장되었습니다.")
+        st.success("텍스트 파일이 성공적으로 업로드 되었습니다.")
 
     # 이미지 파일 업로드 위젯 추가
     uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
@@ -407,7 +408,7 @@ if __name__ == '__main__':
         with open(img_save_path, "wb") as f:
             f.write(uploaded_img_file.getvalue())
         
-        st.success(f"이미지가 {img_save_path}에 성공적으로 저장되었습니다.")
+        st.success(f"이미지가 성공적으로 업로드 되었습니다.")
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
