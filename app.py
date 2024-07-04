@@ -25,6 +25,21 @@ def download_checkpoint():
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
 
+# 폴더 내의 모든 파일 삭제 함수
+def clear_directory(directory):
+    if os.path.exists(directory):
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    for subfile in os.listdir(file_path):
+                        os.unlink(os.path.join(file_path, subfile))
+                    os.rmdir(file_path)
+            except Exception as e:
+                st.error(f"Failed to delete {file_path}. Reason: {e}")
+
 # Streamlit 애플리케이션 코드
 st.title("Wav2Lip Demo")
 st.write("Hello, world!")
@@ -229,6 +244,12 @@ def load_model(path):
     return model.eval()
 
 def main():
+ # 폴더 내의 모든 파일 삭제
+    clear_directory("text_files")
+    clear_directory("pic_files")
+    clear_directory("results")
+    clear_directory("audio_files")
+
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -348,11 +369,48 @@ if __name__ == '__main__':
     if not api_key:
         raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
-    # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
-    if st.button("Generate Video"):
-        create_tts_files(api_key)  # TTS 파일 생성
-        result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
-        st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
+    # 텍스트 파일 업로드 위젯 추가
+    uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
+
+    if uploaded_file is not None:
+        # 업로드된 파일을 text_files 폴더에 저장
+        save_path = os.path.join("text_files", uploaded_file.name)
+        
+        # 디렉토리가 없으면 생성
+        if not os.path.exists("text_files"):
+            os.makedirs("text_files")
+
+        # 파일 저장
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.getvalue())
+        
+        st.success("텍스트 파일이 성공적으로 업로드 되었습니다.")
+# 이미지 파일 업로드 위젯 추가
+    uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
+
+    if uploaded_img_file is not None:
+        # 업로드된 파일을 pic_files 폴더에 저장
+        img_save_path = os.path.join("pic_files", uploaded_img_file.name)
+        
+        # 디렉토리가 없으면 생성
+        if not os.path.exists("pic_files"):
+            os.makedirs("pic_files")
+
+        # 파일 저장
+        with open(img_save_path, "wb") as f:
+            f.write(uploaded_img_file.getvalue())
+        
+        st.success(f"이미지가 성공적으로 업로드 되었습니다.")
+
+	# 업로드된 이미지 파일을 열고 화면에 표시
+        img = Image.open(img_save_path)
+        st.image(img, caption="업로드된 이미지", use_column_width=True)
+
+        # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
+        if st.button("Generate Video"):
+            create_tts_files(api_key)  # TTS 파일 생성
+            result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
+            st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
 
     # 세션 상태에서 결과 파일 이름을 가져옴
     if 'result_filenames' in st.session_state:
