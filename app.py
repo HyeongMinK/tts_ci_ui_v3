@@ -365,23 +365,14 @@ if __name__ == '__main__':
     uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
 
     if uploaded_file is not None:
-	# 폴더 내의 모든 파일 삭제
+        # 폴더 내의 모든 파일 삭제
         clear_directory("text_files")
         clear_directory("pic_files")
         clear_directory("results")
         clear_directory("audio_files")
 
         # 업로드된 파일을 text_files 폴더에 저장
-        save_path = os.path.join("text_files", uploaded_file.name)
-        
-        # 디렉토리가 없으면 생성
-        if not os.path.exists("text_files"):
-            os.makedirs("text_files")
-
-        # 파일 저장
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getvalue())
-        
+        save_path = save_uploaded_file(uploaded_file, "text_files")
         st.success(f"파일이 {save_path}에 성공적으로 저장되었습니다.")
 
     # 이미지 파일 업로드 위젯 추가
@@ -389,22 +380,14 @@ if __name__ == '__main__':
 
     if uploaded_img_file is not None:
         # 업로드된 파일을 pic_files 폴더에 저장
-        img_save_path = os.path.join("pic_files", uploaded_img_file.name)
-        
-        # 디렉토리가 없으면 생성
-        if not os.path.exists("pic_files"):
-            os.makedirs("pic_files")
-
-        # 파일 저장
-        with open(img_save_path, "wb") as f:
-            f.write(uploaded_img_file.getvalue())
-        
+        img_save_path = save_uploaded_file(uploaded_img_file, "pic_files")
         st.success(f"이미지가 {img_save_path}에 성공적으로 저장되었습니다.")
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
         st.image(img, caption="업로드된 이미지", use_column_width=True)
-	parser.add_argument('--face', type=str, help='Filepath of video/image that contains faces to use', default = img_save_path)
+        
+        parser.add_argument('--face', type=str, help='Filepath of video/image that contains faces to use', default=img_save_path)
 
         # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
         if st.button("Generate Video"):
