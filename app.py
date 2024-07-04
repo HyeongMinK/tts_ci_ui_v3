@@ -244,12 +244,6 @@ def load_model(path):
     return model.eval()
 
 def main():
- # 폴더 내의 모든 파일 삭제
-    clear_directory("text_files")
-    clear_directory("pic_files")
-    clear_directory("results")
-    clear_directory("audio_files")
-
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -365,6 +359,12 @@ def main():
     return result_filenames
 
 if __name__ == '__main__':
+ # 폴더 내의 모든 파일 삭제
+    clear_directory("text_files")
+    clear_directory("pic_files")
+    clear_directory("results")
+    clear_directory("audio_files")
+
     api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
     if not api_key:
         raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
@@ -411,6 +411,7 @@ if __name__ == '__main__':
             create_tts_files(api_key)  # TTS 파일 생성
             result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
             st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
+	
 
     # 세션 상태에서 결과 파일 이름을 가져옴
     if 'result_filenames' in st.session_state:
