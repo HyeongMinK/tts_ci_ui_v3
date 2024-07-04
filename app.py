@@ -404,8 +404,7 @@ if __name__ == '__main__':
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
         st.image(img, caption="업로드된 이미지", use_column_width=True)
-	parser.add_argument('--face', type=str, 
-                    help='Filepath of video/image that contains faces to use', default = 'pic_files/pic.png')
+	parser.add_argument('--face', type=str, help='Filepath of video/image that contains faces to use', default = img_save_path)
 
         # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
         if st.button("Generate Video"):
