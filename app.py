@@ -7,12 +7,11 @@ import platform
 import streamlit as st
 import gdown
 from openai import OpenAI
-# from tqdm import tqdm  # tqdm import 제거
+from tqdm import tqdm
 import face_detection
 from models import Wav2Lip
 import argparse
 import audio
-from PIL import Image
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -25,21 +24,6 @@ def download_checkpoint():
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
-
-# 폴더 내의 모든 파일 삭제 함수
-def clear_directory(directory):
-    if os.path.exists(directory):
-        for filename in os.listdir(directory):
-            file_path = os.path.join(directory, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    for subfile in os.listdir(file_path):
-                        os.unlink(os.path.join(file_path, subfile))
-                    os.rmdir(file_path)
-            except Exception as e:
-                st.error(f"Failed to delete {file_path}. Reason: {e}")
 
 # Streamlit 애플리케이션 코드
 st.title("Wav2Lip Demo")
@@ -140,7 +124,7 @@ def face_detect(images):
     while 1:
         predictions = []
         try:
-            for i in range(0, len(images), batch_size):
+            for i in tqdm(range(0, len(images), batch_size)):
                 predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
         except RuntimeError:
             if batch_size == 1: 
@@ -284,11 +268,8 @@ def main():
     
     result_filenames = []
     
-    total_audio_files = len([name for name in os.listdir(audio_dir) if name.endswith('.wav')])
-    progress_bar = st.progress(0)
-    
     # audio_files 폴더의 모든 오디오 파일에 대해 처리
-    for idx, audio_file_name in enumerate(os.listdir(audio_dir)):
+    for audio_file_name in os.listdir(audio_dir):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
             print(f'Skipping non-wav file: {audio_file_path}')
@@ -325,7 +306,8 @@ def main():
         batch_size = args.wav2lip_batch_size
         gen = datagen(full_frames.copy(), mel_chunks)
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(gen):
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
+                                                total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
             if i == 0:
                 model = load_model(args.checkpoint_path)
                 print ("Model loaded")
@@ -358,20 +340,25 @@ def main():
         subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
-
-        # Update progress bar
-        progress = (idx + 1) / total_audio_files
-        progress_bar.progress(progress)
     
     return result_filenames
 
-if __name__ == '__main__':
-    # 폴더 내의 모든 파일 삭제
-    clear_directory("text_files")
-    clear_directory("pic_files")
-    clear_directory("results")
-    clear_directory("audio_files")
+# 폴더 내의 모든 파일 삭제 함수
+def clear_directory(directory):
+    if os.path.exists(directory):
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    for subfile in os.listdir(file_path):
+                        os.unlink(os.path.join(file_path, subfile))
+                    os.rmdir(file_path)
+            except Exception as e:
+                st.error(f"Failed to delete {file_path}. Reason: {e}")
 
+if __name__ == '__main__':
     api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
     if not api_key:
         raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
@@ -391,7 +378,7 @@ if __name__ == '__main__':
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getvalue())
         
-        st.success("텍스트 파일이 성공적으로 업로드 되었습니다.")
+        st.success(f"파일이 {save_path}에 성공적으로 저장되었습니다.")
 
     # 이미지 파일 업로드 위젯 추가
     uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
@@ -408,7 +395,7 @@ if __name__ == '__main__':
         with open(img_save_path, "wb") as f:
             f.write(uploaded_img_file.getvalue())
         
-        st.success(f"이미지가 성공적으로 업로드 되었습니다.")
+        st.success(f"이미지가 {img_save_path}에 성공적으로 저장되었습니다.")
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
