@@ -65,9 +65,6 @@ parser = argparse.ArgumentParser(description='Inference code to lip-sync videos 
 parser.add_argument('--checkpoint_path', type=str, 
                     help='Name of saved checkpoint to load weights from', default = 'checkpoints/wav2lip_gan.pth')
 
-parser.add_argument('--face', type=str, 
-                    help='Filepath of video/image that contains faces to use', default = 'pic_files/pic.png')
-
 parser.add_argument('--outfile', type=str, help='Video path to save result. See default for an e.g.', 
                                 default='results/result_voice.mp4')
 
@@ -407,12 +404,14 @@ if __name__ == '__main__':
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
         st.image(img, caption="업로드된 이미지", use_column_width=True)
+	parser.add_argument('--face', type=str, 
+                    help='Filepath of video/image that contains faces to use', default = 'pic_files/pic.png')
 
-    # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
-    if st.button("Generate Video"):
-        create_tts_files(api_key)  # TTS 파일 생성
-        result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
-        st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
+        # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
+        if st.button("Generate Video"):
+            create_tts_files(api_key)  # TTS 파일 생성
+            result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
+            st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
 
     # 세션 상태에서 결과 파일 이름을 가져옴
     if 'result_filenames' in st.session_state:
