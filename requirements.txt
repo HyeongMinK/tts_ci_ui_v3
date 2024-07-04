@@ -10,3 +10,4 @@ soxr
 gdown
 streamlit
 scipy
+pillow

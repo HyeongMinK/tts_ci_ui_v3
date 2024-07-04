@@ -12,6 +12,7 @@ import face_detection
 from models import Wav2Lip
 import argparse
 import audio
+from PIL import Image
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
