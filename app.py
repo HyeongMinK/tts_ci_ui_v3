@@ -66,7 +66,7 @@ parser.add_argument('--checkpoint_path', type=str,
                     help='Name of saved checkpoint to load weights from', default = 'checkpoints/wav2lip_gan.pth')
 
 parser.add_argument('--face', type=str, 
-                    help='Filepath of video/image that contains faces to use', default = 'pic_files/pic.png')
+                    help='Filepath of video/image that contains faces to use', default = img_save_path)
 
 parser.add_argument('--outfile', type=str, help='Video path to save result. See default for an e.g.', 
                                 default='results/result_voice.mp4')
