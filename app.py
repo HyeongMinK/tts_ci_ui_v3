@@ -7,7 +7,7 @@ import platform
 import streamlit as st
 import gdown
 from openai import OpenAI
-from tqdm import tqdm
+# from tqdm import tqdm  # tqdm import 제거
 import face_detection
 from models import Wav2Lip
 import argparse
@@ -140,7 +140,7 @@ def face_detect(images):
     while 1:
         predictions = []
         try:
-            for i in tqdm(range(0, len(images), batch_size)):
+            for i in range(0, len(images), batch_size):
                 predictions.extend(detector.get_detections_for_batch(np.array(images[i:i + batch_size])))
         except RuntimeError:
             if batch_size == 1: 
@@ -283,9 +283,13 @@ def main():
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
     
     result_filenames = []
+
+    # Streamlit 진행률 표시를 위한 위젯 생성
+    progress_bar = st.progress(0)
+    total_audio_files = len(os.listdir(audio_dir))
     
     # audio_files 폴더의 모든 오디오 파일에 대해 처리
-    for audio_file_name in os.listdir(audio_dir):
+    for audio_file_index, audio_file_name in enumerate(os.listdir(audio_dir)):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
             print(f'Skipping non-wav file: {audio_file_path}')
@@ -322,8 +326,7 @@ def main():
         batch_size = args.wav2lip_batch_size
         gen = datagen(full_frames.copy(), mel_chunks)
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
-                                                total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(gen): # tqdm 부분 제거
             if i == 0:
                 model = load_model(args.checkpoint_path)
                 print ("Model loaded")
@@ -356,19 +359,21 @@ def main():
         subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
+
+        # 진행률 업데이트
+        progress_bar.progress((audio_file_index + 1) / total_audio_files)
     
     return result_filenames
 
 if __name__ == '__main__':
- # 폴더 내의 모든 파일 삭제
+    api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
+# 폴더 내의 모든 파일 삭제
     clear_directory("text_files")
     clear_directory("pic_files")
     clear_directory("results")
     clear_directory("audio_files")
-
-    api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
     # 텍스트 파일 업로드 위젯 추가
     uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
@@ -385,8 +390,9 @@ if __name__ == '__main__':
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getvalue())
         
-        st.success("텍스트 파일이 성공적으로 업로드 되었습니다.")
-# 이미지 파일 업로드 위젯 추가
+        st.success(f"텍스트 파일이 {save_path}에 성공적으로 저장되었습니다.")
+
+    # 이미지 파일 업로드 위젯 추가
     uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
 
     if uploaded_img_file is not None:
@@ -401,18 +407,17 @@ if __name__ == '__main__':
         with open(img_save_path, "wb") as f:
             f.write(uploaded_img_file.getvalue())
         
-        st.success(f"이미지가 성공적으로 업로드 되었습니다.")
+        st.success(f"이미지가 {img_save_path}에 성공적으로 저장되었습니다.")
 
-	# 업로드된 이미지 파일을 열고 화면에 표시
+        # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
         st.image(img, caption="업로드된 이미지", use_column_width=True)
 
-        # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
-        if st.button("Generate Video"):
-            create_tts_files(api_key)  # TTS 파일 생성
-            result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
-            st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
-	
+    # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
+    if st.button("Generate Video"):
+        create_tts_files(api_key)  # TTS 파일 생성
+        result_filenames = main()  # Wav2Lip 실행 및 결과 파일 생성
+        st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
 
     # 세션 상태에서 결과 파일 이름을 가져옴
     if 'result_filenames' in st.session_state:
