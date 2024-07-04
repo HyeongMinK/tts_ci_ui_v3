@@ -407,7 +407,7 @@ if __name__ == '__main__':
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
-        st.image(img, caption="업로드된 이미지", use_column_width=True)
+        st.image(img, caption="업로드된 이미지", width=300)
 
     if uploaded_file is not None and uploaded_img_file is not None:
 
