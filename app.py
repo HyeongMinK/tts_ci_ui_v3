@@ -361,7 +361,7 @@ def clear_directory(directory):
                 st.error(f"Failed to delete {file_path}. Reason: {e}")
 
 if __name__ == '__main__':
-    st.title("TTS를 통한 립싱크 영상 생성 애플리케이션")
+    st.title("영상 생성 애플리케이션")
 
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
@@ -425,6 +425,8 @@ if __name__ == '__main__':
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
-                if st.button("다시 시작하기"):
-                    st.session_state.process_started = False
-                    st.experimental_rerun()
+
+            restart_button = st.button("다시 시작하기")
+            if restart_button:
+                st.session_state.process_started = False
+                st.experimental_rerun()
