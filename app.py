@@ -425,6 +425,5 @@ if __name__ == '__main__':
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
-                        if download_button:
-                            st.session_state.process_started = False
-                            st.button("다시 시작하기")
+                if st.button("다시 시작하기"):
+                  st.session_state.process_started = False                  
