@@ -368,6 +368,11 @@ if __name__ == '__main__':
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
+	# 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
+            clear_directory("text_files")
+            clear_directory("pic_files")
+            clear_directory("results")
+            clear_directory("audio_files")
             st.session_state.process_started = True
     else:
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
@@ -421,10 +426,5 @@ if __name__ == '__main__':
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
                         if download_button:
-                            # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
-                            clear_directory("text_files")
-                            clear_directory("pic_files")
-                            clear_directory("results")
-                            clear_directory("audio_files")
                             st.session_state.process_started = False
                             st.button("다시 시작하기")
