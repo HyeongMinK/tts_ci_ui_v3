@@ -374,6 +374,7 @@ if __name__ == '__main__':
             clear_directory("results")
             clear_directory("audio_files")
             st.session_state.process_started = True
+	    st.experimental_rerun()
     if st.session_state.process_started:
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
         if not api_key:
@@ -426,4 +427,5 @@ if __name__ == '__main__':
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
                 if st.button("다시 시작하기"):
-                  st.session_state.process_started = False                  
+                  st.session_state.process_started = False
+                  st.experimental_rerun()                  
