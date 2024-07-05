@@ -361,20 +361,21 @@ def clear_directory(directory):
                 st.error(f"Failed to delete {file_path}. Reason: {e}")
 
 if __name__ == '__main__':
-    st.title("영상 생성 애플리케이션")
+    st.title("TTS를 통한 립싱크 영상 생성 애플리케이션")
 
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
-	# 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
+            # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
             clear_directory("text_files")
             clear_directory("pic_files")
             clear_directory("results")
             clear_directory("audio_files")
             st.session_state.process_started = True
-	    st.experimental_rerun()
+            st.experimental_rerun()
+            
     if st.session_state.process_started:
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
         if not api_key:
@@ -394,7 +395,6 @@ if __name__ == '__main__':
             # 파일 저장
             with open(save_path, "wb") as f:
                 f.write(uploaded_file.getvalue())
-            
 
         # 이미지 파일 업로드 위젯 추가
         uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
@@ -410,7 +410,6 @@ if __name__ == '__main__':
             # 파일 저장
             with open(img_save_path, "wb") as f:
                 f.write(uploaded_img_file.getvalue())
-            
 
             # 업로드된 이미지 파일을 열고 화면에 표시
             img = Image.open(img_save_path)
@@ -427,5 +426,5 @@ if __name__ == '__main__':
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
                 if st.button("다시 시작하기"):
-                  st.session_state.process_started = False
-                  st.experimental_rerun()                  
+                    st.session_state.process_started = False
+                    st.experimental_rerun()
