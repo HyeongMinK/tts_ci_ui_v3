@@ -403,7 +403,7 @@ if __name__ == '__main__':
         img = Image.open(img_save_path)
         st.image(img, caption="업로드된 이미지", width=200)
 
-  if uploaded_file is not None and uploaded_img_file is not None:
+    if uploaded_file is not None and uploaded_img_file is not None:
         # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
         if st.button("Generate Video"):
             create_tts_files(api_key)  # TTS 파일 생성
@@ -419,4 +419,3 @@ if __name__ == '__main__':
                         clear_directory("pic_files")
                         clear_directory("results")
                         clear_directory("audio_files")
-                        clear_directory("tts_files")
