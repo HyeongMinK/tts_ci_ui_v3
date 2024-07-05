@@ -343,7 +343,7 @@ def main(face_path):
 
         result_filenames.append(result_filename)
     
-    return result_filenames
+    return result_filename
 
 # 폴더 내의 모든 파일 삭제 함수
 def clear_directory(directory):
@@ -380,7 +380,6 @@ if __name__ == '__main__':
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getvalue())
         
-        st.success(f"파일이 {save_path}에 성공적으로 저장되었습니다.")
 
     # 이미지 파일 업로드 위젯 추가
     uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
@@ -397,7 +396,6 @@ if __name__ == '__main__':
         with open(img_save_path, "wb") as f:
             f.write(uploaded_img_file.getvalue())
         
-        st.success(f"이미지가 {img_save_path}에 성공적으로 저장되었습니다.")
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
