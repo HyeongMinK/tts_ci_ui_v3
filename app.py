@@ -426,7 +426,7 @@ if __name__ == '__main__':
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
 
-            restart_button = st.button("다시 시작하기")
-            if restart_button:
-                st.session_state.process_started = False
-                st.experimental_rerun()
+                    restart_button = st.button("다시 시작하기")
+                    if restart_button:
+                        st.session_state.process_started = False
+                        st.experimental_rerun()
