@@ -369,12 +369,6 @@ if __name__ == '__main__':
     uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
 
     if uploaded_file is not None:
-	# 폴더 내의 모든 파일 삭제
-        clear_directory("text_files")
-        clear_directory("pic_files")
-        clear_directory("results")
-        clear_directory("audio_files")
-
         # 업로드된 파일을 text_files 폴더에 저장
         save_path = os.path.join("text_files", uploaded_file.name)
         
@@ -407,20 +401,22 @@ if __name__ == '__main__':
 
         # 업로드된 이미지 파일을 열고 화면에 표시
         img = Image.open(img_save_path)
-        st.image(img, caption="업로드된 이미지", width=300)
+        st.image(img, caption="업로드된 이미지", width=200)
 
-    if uploaded_file is not None and uploaded_img_file is not None:
-
-      # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
-      if st.button("Generate Video"):
-          create_tts_files(api_key)  # TTS 파일 생성
-          result_filenames = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
-          st.session_state.result_filenames = result_filenames  # 세션 상태에 결과 파일 이름 저장
-
-      # 세션 상태에서 결과 파일 이름을 가져옴
-      if 'result_filenames' in st.session_state:
-          result_filenames = st.session_state.result_filenames
-          # 각 결과 파일에 대해 다운로드 버튼 추가
-          for result_filename in result_filenames:
-              with open(result_filename, "rb") as f:
-                  st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
+  if uploaded_file is not None and uploaded_img_file is not None:
+        # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
+        if st.button("Generate Video"):
+            create_tts_files(api_key)  # TTS 파일 생성
+            result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
+            # 결과 파일에 대해 다운로드 버튼 추가
+            if os.path.exists(result_filename):
+                with open(result_filename, "rb") as f:
+                    st.success("영상이 성공적으로 생성되었습니다.")
+                    download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
+                    if download_button:
+                        # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
+                        clear_directory("text_files")
+                        clear_directory("pic_files")
+                        clear_directory("results")
+                        clear_directory("audio_files")
+                        clear_directory("tts_files")
