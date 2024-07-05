@@ -374,7 +374,7 @@ if __name__ == '__main__':
             clear_directory("results")
             clear_directory("audio_files")
             st.session_state.process_started = True
-    else:
+    if st.session_state.process_started:
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
         if not api_key:
             raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
