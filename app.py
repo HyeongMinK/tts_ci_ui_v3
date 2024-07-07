@@ -16,10 +16,10 @@ from PIL import Image
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
-    checkpoint_path = 'checkpoints/wav2lip_gan.pth'
+    checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
         st.info('Downloading model checkpoint...')
-        url = 'https://drive.google.com/uc?id=1PyxYrrjLcKdhdyMMIXlhUYpnoWR9zN-T'
+        url = 'https://drive.google.com/file/d/1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS/view?usp=sharing'
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
 
@@ -60,7 +60,7 @@ def create_tts_files(api_key):
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
 
 parser.add_argument('--checkpoint_path', type=str, 
-                    help='Name of saved checkpoint to load weights from', default = 'checkpoints/wav2lip_gan.pth')
+                    help='Name of saved checkpoint to load weights from', default = 'checkpoints/wav2lip.pth')
 
 parser.add_argument('--face', type=str, 
                     help='Filepath of video/image that contains faces to use', default = 'pic_files/pic.png')
