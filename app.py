@@ -19,7 +19,7 @@ def download_checkpoint():
     checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
         st.info('Downloading model checkpoint...')
-        url = 'https://drive.google.com/file/d/1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS/view?usp=sharing'
+        url = 'https://drive.google.com/uc?id=1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS'
         gdown.download(url, checkpoint_path, quiet=False)
         st.success('Model checkpoint downloaded.')
 
