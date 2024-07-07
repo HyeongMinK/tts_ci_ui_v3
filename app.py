@@ -371,7 +371,7 @@ if __name__ == '__main__':
             clear_directory("results")
             clear_directory("audio_files")
             st.session_state.process_started = True
-            st.experimental_rerun()
+            st.rerun()
             
     if st.session_state.process_started:
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
@@ -415,15 +415,23 @@ if __name__ == '__main__':
         if uploaded_file is not None and uploaded_img_file is not None:
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("Generate Video"):
-                create_tts_files(api_key)  # TTS 파일 생성
-                result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
+                with st.spinner("TTS 파일 생성 중..."):
+                    create_tts_files(api_key)  # TTS 파일 생성
+
+                with st.spinner("영상 파일 생성 중..."):
+                    result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
+
                 # 결과 파일에 대해 다운로드 버튼 추가
                 if os.path.exists(result_filename):
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
-                        download_button = st.download_button(label=f"Download {os.path.basename(result_filename)}", data=f, file_name=os.path.basename(result_filename), mime="video/mp4")
-
-            restart_button = st.button("초기 화면으로 돌아가기")
+                        download_button = st.download_button(
+                            label=f"Download {os.path.basename(result_filename)}",
+                            data=f,
+                            file_name=os.path.basename(result_filename),
+                            mime="video/mp4"
+                        )
+            restart_button = st.button("Reset")
             if restart_button:
                 st.session_state.process_started = False
-                st.experimental_rerun()
+                st.rerun()
