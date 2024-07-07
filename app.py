@@ -15,6 +15,7 @@ import audio
 from PIL import Image
 
 # 모델 체크포인트 다운로드 함수
+@st.cache_data
 def download_checkpoint():
     checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
