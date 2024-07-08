@@ -359,7 +359,7 @@ def clear_directory(directory):
                 st.error(f"Failed to delete {file_path}. Reason: {e}")
 
 if __name__ == '__main__':
-    st.title("TTS 립싱크 영상 생성")
+    st.title("TTS 립싱크 영상 생성기")
 
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
