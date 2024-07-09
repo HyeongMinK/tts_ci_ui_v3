@@ -17,12 +17,20 @@ import gc
 
 def clear_memory():
     # 명시적으로 메모리에서 삭제
-    del model
-    del detector
-    del predictions
-    del boxes
-    del full_frames
-    del mel_chunks
+    global model, detector, predictions, boxes, full_frames, mel_chunks
+
+    if 'model' in globals():
+        del model
+    if 'detector' in globals():
+        del detector
+    if 'predictions' in globals():
+        del predictions
+    if 'boxes' in globals():
+        del boxes
+    if 'full_frames' in globals():
+        del full_frames
+    if 'mel_chunks' in globals():
+        del mel_chunks
 
     # 가비지 컬렉션 강제 실행
     gc.collect()
@@ -230,6 +238,7 @@ def _load(checkpoint_path):
 
 @st.cache_data
 def load_model(path):
+    global model
     model = Wav2Lip()
     print("Load checkpoint from: {}".format(path))
     checkpoint = _load(path)
@@ -243,6 +252,7 @@ def load_model(path):
     return model.eval()
 
 def main(face_path):
+    global full_frames, mel_chunks, model, detector, predictions, boxes
     args.face=face_path
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
