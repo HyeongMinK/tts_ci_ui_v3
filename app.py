@@ -13,7 +13,6 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
-import psutil 
 
 # 모델 체크포인트 다운로드 함수
 
@@ -360,13 +359,6 @@ def clear_directory(directory):
             except Exception as e:
                 st.error(f"Failed to delete {file_path}. Reason: {e}")
 
-def show_memory_usage():
-    memory_info = psutil.virtual_memory()
-    st.sidebar.markdown(f"**Memory Usage**")
-    st.sidebar.markdown(f"Total: {memory_info.total / (1024 ** 3):.2f} GB")
-    st.sidebar.markdown(f"Available: {memory_info.available / (1024 ** 3):.2f} GB")
-    st.sidebar.markdown(f"Used: {memory_info.used / (1024 ** 3):.2f} GB")
-    st.sidebar.markdown(f"Percentage: {memory_info.percent}%")
 
 if __name__ == '__main__':
     st.title("TTS 립싱크 영상 생성기")
@@ -390,9 +382,6 @@ if __name__ == '__main__':
         api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
         if not api_key:
             raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
-
-        # 현재 메모리 사용량 표시
-        show_memory_usage()
 
         # 텍스트 파일 업로드 위젯 추가
         uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
