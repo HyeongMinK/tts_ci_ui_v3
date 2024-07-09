@@ -201,7 +201,7 @@ def datagen(frames, mels):
 
 mel_step_size = 16
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print('Using {} for inference.'.format(device))
+
 
 @st.cache_data
 def _load(checkpoint_path):
