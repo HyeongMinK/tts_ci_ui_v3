@@ -11,4 +11,4 @@ gdown
 streamlit
 scipy
 pillow
-Plutil
+psutil
