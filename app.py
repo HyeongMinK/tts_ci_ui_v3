@@ -422,7 +422,7 @@ if __name__ == '__main__':
             st.image(img, caption="업로드된 이미지", width=200)
 
         if uploaded_file is not None and uploaded_img_file is not None:
-            voice_options = ["Alloy", "Echo", "Fable", "Onyx", "Nova", "Shimmer"]
+            voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
             selected_voice = st.radio("Select a voice option for TTS", voice_options, index=1)  # Default to "Echo"
 
             
