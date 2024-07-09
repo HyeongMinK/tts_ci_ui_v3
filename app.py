@@ -355,6 +355,9 @@ def main(face_path):
         subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
+
+    # 메모리 해제 및 정리
+    clear_memory()
     
     return result_filename
 
