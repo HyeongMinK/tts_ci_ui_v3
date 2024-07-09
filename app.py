@@ -422,6 +422,9 @@ if __name__ == '__main__':
             st.image(img, caption="업로드된 이미지", width=200)
 
         if uploaded_file is not None and uploaded_img_file is not None:
+            voice_options = ["Alloy", "Echo", "Fable", "Onyx", "Nova", "Shimmer"]
+            selected_voice = st.radio("Select a voice option for TTS", voice_options, index=1)  # Default to "Echo"
+
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 clear_directory("audio_files")
