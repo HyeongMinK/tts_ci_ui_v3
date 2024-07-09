@@ -425,6 +425,7 @@ if __name__ == '__main__':
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 clear_directory("audio_files")
+                clear_directory("results")
                 with st.spinner("TTS 파일 생성 중..."):
                     create_tts_files(api_key,uploaded_file.name)  # TTS 파일 생성
 
@@ -433,6 +434,8 @@ if __name__ == '__main__':
 
                 # 결과 파일에 대해 다운로드 버튼 추가
                 if os.path.exists(result_filename):
+                    clear_directory("text_files")
+                    clear_directory("pic_files")
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
                         download_button = st.download_button(
