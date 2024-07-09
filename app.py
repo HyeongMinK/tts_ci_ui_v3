@@ -387,6 +387,7 @@ if __name__ == '__main__':
         uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
 
         if uploaded_file is not None:
+            clear_directory("text_files")
             # 업로드된 파일을 text_files 폴더에 저장
             save_path = os.path.join("text_files", uploaded_file.name)
             
