@@ -435,13 +435,12 @@ if __name__ == '__main__':
                 if os.path.exists(result_filename):
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
-                        download_button = st.download_button(
+                        if st.download_button(
                             label=f"Download {os.path.basename(result_filename)}",
                             data=f,
                             file_name=os.path.basename(result_filename),
                             mime="video/mp4"
-                        )
-                    # 다운로드 버튼이 눌리면 process_started를 False로 설정하고 rerun
-                    if download_button:
-                        st.session_state.process_started = False
-                        st.rerun()
+                        ):
+                            st.session_state.process_started = False
+                            st.rerun()
+
