@@ -203,7 +203,7 @@ mel_step_size = 16
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-@st.cache_data
+
 def _load(checkpoint_path):
     if device == 'cuda':
         checkpoint = torch.load(checkpoint_path)
