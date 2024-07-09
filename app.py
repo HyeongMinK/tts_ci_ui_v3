@@ -387,7 +387,6 @@ if __name__ == '__main__':
         uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
 
         if uploaded_file is not None:
-            clear_directory("text_files")
             # 업로드된 파일을 text_files 폴더에 저장
             save_path = os.path.join("text_files", uploaded_file.name)
             
@@ -442,3 +441,7 @@ if __name__ == '__main__':
                             file_name=os.path.basename(result_filename),
                             mime="video/mp4"
                         )
+                    # 다운로드 버튼이 눌리면 process_started를 False로 설정하고 rerun
+                    if download_button:
+                        st.session_state.process_started = False
+                        st.rerun()
