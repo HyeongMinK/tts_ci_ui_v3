@@ -33,7 +33,7 @@ def text_to_speech(client, text, output_audio_path):
     response.stream_to_file(output_audio_path)
     print(f"Audio file saved at {output_audio_path}")
 
-def create_tts_files(api_key):
+def create_tts_files(api_key, txt_n):
     client = OpenAI(api_key=api_key)
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,14 +44,13 @@ def create_tts_files(api_key):
     if not os.path.exists(audio_dir):
         os.makedirs(audio_dir)
     
-    # text_files 폴더의 모든 텍스트 파일에 대해 TTS 수행
-    for text_file_name in os.listdir(text_dir):
-        text_file_path = os.path.join(text_dir, text_file_name)
-        with open(text_file_path, "r", encoding="utf-8") as text_file:
-            text = text_file.read().strip()
-        
-        output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(text_file_name)[0]}.wav")
-        text_to_speech(client, text, output_audio_path)
+    # 단일 텍스트 파일에 대해 TTS 수행
+    text_file_path = os.path.join(text_dir, txt_n)
+    with open(text_file_path, "r", encoding="utf-8") as text_file:
+        text = text_file.read().strip()
+    
+    output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(txt_n)[0]}.wav")
+    text_to_speech(client, text, output_audio_path)
 
 # Wav2Lip 코드
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -365,14 +364,12 @@ if __name__ == '__main__':
 
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
-    if "text_file_uploaded" not in st.session_state:
-        st.session_state.text_file_uploaded = False
-    if "img_file_uploaded" not in st.session_state:
-        st.session_state.img_file_uploaded = False
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
+            # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
             download_checkpoint()
+            # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
             clear_directory("text_files")
             clear_directory("pic_files")
             clear_directory("results")
@@ -381,49 +378,63 @@ if __name__ == '__main__':
             st.rerun()
             
     if st.session_state.process_started:
-        api_key = os.getenv('OPENAI_API_KEY')
+        api_key = os.getenv('OPENAI_API_KEY')  # 환경 변수에서 API 키를 가져옵니다.
         if not api_key:
             raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
-        if not st.session_state.text_file_uploaded:
-            uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
+        # 텍스트 파일 업로드 위젯 추가
+        uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
 
-            if uploaded_file is not None:
-                save_path = os.path.join("text_files", uploaded_file.name)
-                if not os.path.exists("text_files"):
-                    os.makedirs("text_files")
-                with open(save_path, "wb") as f:
-                    f.write(uploaded_file.getvalue())
-                with open(save_path, "r", encoding="utf-8") as f:
-                    file_contents = f.read()
-                    st.text_area("업로드된 텍스트 파일 내용", file_contents, height=150)
-                st.session_state.text_file_uploaded = True
+        if uploaded_file is not None:
+            # 업로드된 파일을 text_files 폴더에 저장
+            save_path = os.path.join("text_files", uploaded_file.name)
+            
+            # 디렉토리가 없으면 생성
+            if not os.path.exists("text_files"):
+                os.makedirs("text_files")
 
-        if not st.session_state.img_file_uploaded:
-            uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
+            # 파일 저장
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.getvalue())
+            
+            # 업로드된 텍스트 파일의 내용을 읽고 화면에 표시
+            with open(save_path, "r", encoding="utf-8") as f:
+                file_contents = f.read()
+                st.text_area("업로드된 텍스트 파일 내용", file_contents, height=150)
 
-            if uploaded_img_file is not None:
-                img_save_path = os.path.join("pic_files", uploaded_img_file.name)
-                if not os.path.exists("pic_files"):
-                    os.makedirs("pic_files")
-                with open(img_save_path, "wb") as f:
-                    f.write(uploaded_img_file.getvalue())
-                img = Image.open(img_save_path)
-                st.image(img, caption="업로드된 이미지", width=200)
-                st.session_state.img_file_uploaded = True
+        # 이미지 파일 업로드 위젯 추가
+        uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
 
-        if st.session_state.text_file_uploaded and st.session_state.img_file_uploaded:
+        if uploaded_img_file is not None:
+            # 업로드된 파일을 pic_files 폴더에 저장
+            img_save_path = os.path.join("pic_files", uploaded_img_file.name)
+            
+            # 디렉토리가 없으면 생성
+            if not os.path.exists("pic_files"):
+                os.makedirs("pic_files")
+
+            # 파일 저장
+            with open(img_save_path, "wb") as f:
+                f.write(uploaded_img_file.getvalue())
+
+            # 업로드된 이미지 파일을 열고 화면에 표시
+            img = Image.open(img_save_path)
+            st.image(img, caption="업로드된 이미지", width=200)
+
+        if uploaded_file is not None and uploaded_img_file is not None:
+            # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 with st.spinner("TTS 파일 생성 중..."):
-                    create_tts_files(api_key)
+                    create_tts_files(api_key,uploaded_file.name)  # TTS 파일 생성
+
                 with st.spinner("영상 파일 생성 중..."):
-                    result_filename = main(img_save_path)
+                    result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
+
+                # 결과 파일에 대해 다운로드 버튼 추가
                 if os.path.exists(result_filename):
                     with open(result_filename, "rb") as f:
                         st.success("영상이 성공적으로 생성되었습니다.")
-                        st.download_button(label="다운로드", data=f, file_name="result_video.mp4")
+                    # 다운로드 버튼이 눌리면 process_started를 False로 설정하고 rerun
+                    if download_button:
                         st.session_state.process_started = False
-                        st.session_state.text_file_uploaded = False
-                        st.session_state.img_file_uploaded = False
                         st.rerun()
-
