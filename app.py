@@ -16,7 +16,7 @@ from PIL import Image
 
 
 # 모델 체크포인트 다운로드 함수
-@st.cache_data
+
 def download_checkpoint():
     checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
@@ -212,7 +212,7 @@ def _load(checkpoint_path):
                                 map_location=lambda storage, loc: storage)
     return checkpoint
 
-@st.cache_data
+
 def load_model(path):
     global model
     model = Wav2Lip()
