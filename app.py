@@ -13,28 +13,6 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
-import gc
-
-def clear_memory():
-    # 명시적으로 메모리에서 삭제
-    global model, detector, predictions, boxes, full_frames, mel_chunks
-
-    if 'model' in globals():
-        del model
-    if 'detector' in globals():
-        del detector
-    if 'predictions' in globals():
-        del predictions
-    if 'boxes' in globals():
-        del boxes
-    if 'full_frames' in globals():
-        del full_frames
-    if 'mel_chunks' in globals():
-        del mel_chunks
-
-    # 가비지 컬렉션 강제 실행
-    gc.collect()
-    torch.cuda.empty_cache()
 
 
 # 모델 체크포인트 다운로드 함수
@@ -364,8 +342,6 @@ def main(face_path):
 
         result_filenames.append(result_filename)
 
-    # 메모리 해제 및 정리
-    clear_memory()
     
     return result_filename
 
