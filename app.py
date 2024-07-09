@@ -368,7 +368,7 @@ if __name__ == '__main__':
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
-          # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
+            # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
             download_checkpoint()
             # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
             clear_directory("text_files")
@@ -397,6 +397,11 @@ if __name__ == '__main__':
             # 파일 저장
             with open(save_path, "wb") as f:
                 f.write(uploaded_file.getvalue())
+            
+            # 업로드된 텍스트 파일의 내용을 읽고 화면에 표시
+            with open(save_path, "r", encoding="utf-8") as f:
+                file_contents = f.read()
+                st.text_area("업로드된 텍스트 파일 내용", file_contents, height=150)
 
         # 이미지 파일 업로드 위젯 추가
         uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
@@ -436,3 +441,4 @@ if __name__ == '__main__':
                             file_name=os.path.basename(result_filename),
                             mime="video/mp4"
                         )
+
