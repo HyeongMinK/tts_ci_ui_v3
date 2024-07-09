@@ -45,8 +45,6 @@ def download_checkpoint():
         url = 'https://drive.google.com/uc?id=1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS'
         gdown.download(url, checkpoint_path, quiet=False)
 
-# Streamlit 애플리케이션 시작 시 체크포인트 다운로드
-download_checkpoint()
 
 
 def text_to_speech(client, text, output_audio_path):
@@ -394,6 +392,8 @@ if __name__ == '__main__':
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
+          # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
+            download_checkpoint()
             # 다운로드 버튼이 눌리면 폴더 내의 모든 파일 삭제
             clear_directory("text_files")
             clear_directory("pic_files")
