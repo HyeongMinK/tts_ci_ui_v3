@@ -33,7 +33,7 @@ def text_to_speech(client, text, output_audio_path, input_voice):
     response.stream_to_file(output_audio_path)
     print(f"Audio file saved at {output_audio_path}")
 
-def create_tts_files(api_key, txt_n):
+def create_tts_files(api_key, txt_n, input_voice):
     client = OpenAI(api_key=api_key)
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +50,7 @@ def create_tts_files(api_key, txt_n):
         text = text_file.read().strip()
     
     output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(txt_n)[0]}.wav")
-    text_to_speech(client, text, output_audio_path)
+    text_to_speech(client, text, output_audio_path, input_voice)
 
 # Wav2Lip 코드
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -424,13 +424,15 @@ if __name__ == '__main__':
         if uploaded_file is not None and uploaded_img_file is not None:
             voice_options = ["Alloy", "Echo", "Fable", "Onyx", "Nova", "Shimmer"]
             selected_voice = st.radio("Select a voice option for TTS", voice_options, index=1)  # Default to "Echo"
+            # 선택된 결과를 변수에 저장
+            st.session_state.selected_voice = selected_voice
             
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 clear_directory("audio_files")
                 clear_directory("results")
                 with st.spinner("TTS 파일 생성 중..."):
-                    create_tts_files(api_key,uploaded_file.name, selected_voice)  # TTS 파일 생성
+                    create_tts_files(api_key,uploaded_file.name, st.session_state.selected_voice)  # TTS 파일 생성
 
                 with st.spinner("영상 파일 생성 중..."):
                     result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
