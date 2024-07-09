@@ -13,6 +13,21 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
+import gc
+
+def clear_memory():
+    # 명시적으로 메모리에서 삭제
+    del model
+    del detector
+    del predictions
+    del boxes
+    del full_frames
+    del mel_chunks
+
+    # 가비지 컬렉션 강제 실행
+    gc.collect()
+    torch.cuda.empty_cache()
+
 
 # 모델 체크포인트 다운로드 함수
 @st.cache_data
