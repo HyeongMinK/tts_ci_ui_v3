@@ -424,6 +424,7 @@ if __name__ == '__main__':
         if uploaded_file is not None and uploaded_img_file is not None:
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
+                clear_directory("audio_files")
                 with st.spinner("TTS 파일 생성 중..."):
                     create_tts_files(api_key,uploaded_file.name)  # TTS 파일 생성
 
