@@ -19,10 +19,8 @@ from PIL import Image
 def download_checkpoint():
     checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
-        st.info('Downloading model checkpoint...')
         url = 'https://drive.google.com/uc?id=1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS'
         gdown.download(url, checkpoint_path, quiet=False)
-        st.success('Model checkpoint downloaded.')
 
 # Streamlit 애플리케이션 시작 시 체크포인트 다운로드
 download_checkpoint()
@@ -206,6 +204,7 @@ mel_step_size = 16
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using {} for inference.'.format(device))
 
+@st.cache_data
 def _load(checkpoint_path):
     if device == 'cuda':
         checkpoint = torch.load(checkpoint_path)
@@ -214,6 +213,7 @@ def _load(checkpoint_path):
                                 map_location=lambda storage, loc: storage)
     return checkpoint
 
+@st.cache_data
 def load_model(path):
     model = Wav2Lip()
     print("Load checkpoint from: {}".format(path))
@@ -380,7 +380,7 @@ if __name__ == '__main__':
             raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
         # 텍스트 파일 업로드 위젯 추가
-        uploaded_file = st.file_uploader("텍스트 파일을 업로드 하세요", type="txt")
+        uploaded_file = st.file_uploader("TTS 생성을 위한 텍스트 파일을 업로드 하세요", type="txt")
 
         if uploaded_file is not None:
             # 업로드된 파일을 text_files 폴더에 저장
@@ -415,7 +415,7 @@ if __name__ == '__main__':
 
         if uploaded_file is not None and uploaded_img_file is not None:
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
-            if st.button("Generate Video"):
+            if st.button("립싱크 영상 생성하기"):
                 with st.spinner("TTS 파일 생성 중..."):
                     create_tts_files(api_key)  # TTS 파일 생성
 
