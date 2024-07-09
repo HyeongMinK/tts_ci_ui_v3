@@ -75,7 +75,7 @@ parser.add_argument('--pads', nargs='+', type=int, default=[0, 10, 0, 0],
                     help='Padding (top, bottom, left, right). Please adjust to include chin at least')
 
 parser.add_argument('--face_det_batch_size', type=int, 
-                    help='Batch size for face detection', default=16)
+                    help='Batch size for face detection', default=8)
 parser.add_argument('--wav2lip_batch_size', type=int, help='Batch size for Wav2Lip model(s)', default=128)
 
 parser.add_argument('--resize_factor', default=1, type=int, 
