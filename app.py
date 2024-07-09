@@ -24,10 +24,10 @@ def download_checkpoint():
 
 
 
-def text_to_speech(client, text, output_audio_path):
+def text_to_speech(client, text, output_audio_path, input_voice):
     response = client.audio.speech.create(
         model="tts-1",
-        voice="echo",
+        voice=input_voice,
         input=text
     )
     response.stream_to_file(output_audio_path)
@@ -424,13 +424,15 @@ if __name__ == '__main__':
         if uploaded_file is not None and uploaded_img_file is not None:
             voice_options = ["Alloy", "Echo", "Fable", "Onyx", "Nova", "Shimmer"]
             selected_voice = st.radio("Select a voice option for TTS", voice_options, index=1)  # Default to "Echo"
+            st.session_state.selected_voice = selected_voice
+
 
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 clear_directory("audio_files")
                 clear_directory("results")
                 with st.spinner("TTS 파일 생성 중..."):
-                    create_tts_files(api_key,uploaded_file.name)  # TTS 파일 생성
+                    create_tts_files(api_key,uploaded_file.name, st.session_state.selected_voice)  # TTS 파일 생성
 
                 with st.spinner("영상 파일 생성 중..."):
                     result_filename = main(img_save_path)  # Wav2Lip 실행 및 결과 파일 생성
