@@ -436,7 +436,3 @@ if __name__ == '__main__':
                             file_name=os.path.basename(result_filename),
                             mime="video/mp4"
                         )
-            restart_button = st.button("Reset")
-            if restart_button:
-                st.session_state.process_started = False
-                st.rerun()
