@@ -347,14 +347,14 @@ def main(face_path):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (RGBA 지원)
-        output_video_path = 'temp/result.avi'
+        output_video_path = 'temp/result.mov'
         command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -vf "format=rgba" -c:v libx264 -pix_fmt yuv420p {output_video_path}'
         subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
         result_filename = f'results/result_voice_{audio_filename}.mov'
-        command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental -vf "format=rgba" {result_filename}'
+        command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v qtrle -c:a aac -strict experimental {result_filename}'
         subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
