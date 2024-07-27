@@ -12,3 +12,4 @@ streamlit
 scipy
 pillow
 imageio
+imageio[ffmpeg]

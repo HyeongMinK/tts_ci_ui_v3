@@ -313,7 +313,7 @@ def main(face_path):
                 print ("Model loaded")
 
                 frame_h, frame_w = full_frames[0].shape[:-1]
-                writer = imageio.get_writer('temp/result.avi', fps=fps, codec='qtrle')  # RGBA 지원하는 MOV 형식
+                writer = imageio.get_writer('temp/result.avi', fps=fps, codec='ffmpeg')  # RGBA 지원하는 MOV 형식
 
             img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
             mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
