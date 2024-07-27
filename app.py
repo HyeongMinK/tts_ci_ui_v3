@@ -13,7 +13,6 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
-import imageio
 
 # 모델 체크포인트 다운로드 함수
 
@@ -306,6 +305,8 @@ def main(face_path):
         batch_size = args.wav2lip_batch_size
         gen = datagen(full_frames.copy(), mel_chunks)
 
+        video_frames = []
+
         for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
                                                 total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
             if i == 0:
@@ -313,7 +314,7 @@ def main(face_path):
                 print ("Model loaded")
 
                 frame_h, frame_w = full_frames[0].shape[:-1]
-                writer = imageio.get_writer('temp/result.avi', fps=fps, codec='ffmpeg')  # RGBA 지원하는 MOV 형식
+            
 
             img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
             mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
@@ -337,9 +338,18 @@ def main(face_path):
 
     		# f 배열의 특정 영역을 p_rgba로 업데이트
                 f[y1:y2, x1:x2] = p_rgba
-                writer.append_data(f)
+                video_frames.append(f)
 
-        writer.close()
+        # 임시 디렉토리에 개별 프레임 저장
+        temp_dir = 'temp_frames'
+        os.makedirs(temp_dir, exist_ok=True)
+        for idx, frame in enumerate(video_frames):
+            cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
+
+        # ffmpeg 명령어로 프레임을 비디오로 변환 (RGBA 지원)
+        output_video_path = 'temp/result.avi'
+        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -vf "format=rgba" -c:v libx264 -pix_fmt yuv420p {output_video_path}'
+        subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
