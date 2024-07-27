@@ -308,35 +308,35 @@ def main(face_path):
         if not os.path.exists(frame_dir):
             os.makedirs(frame_dir)
 
-        with imageio.get_writer('temp/result.mov', fps=fps, codec='qtrle') as writer:
-            for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
-                if i == 0:
-                    model = load_model(args.checkpoint_path)
-                    print("Model loaded")
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
+            if i == 0:
+                model = load_model(args.checkpoint_path)
+                print("Model loaded")
 
-                img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
-                mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
+            img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
+            mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
 
-                with torch.no_grad():
-                    pred = model(mel_batch, img_batch)
+            with torch.no_grad():
+                pred = model(mel_batch, img_batch)
 
-                pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
+            pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
 
-                for p, f, c in zip(pred, frames, coords):
-                    y1, y2, x1, x2 = c
-                    p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
+            for p, f, c in zip(pred, frames, coords):
+                y1, y2, x1, x2 = c
+                p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
 
-                    alpha_channel = f[y1:y2, x1:x2, 3]
-                    alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))
+                alpha_channel = f[y1:y2, x1:x2, 3]
+                alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))
 
-                    p_rgba = np.dstack((p, alpha_channel))
-                    f[y1:y2, x1:x2] = p_rgba
+                p_rgba = np.dstack((p, alpha_channel))
+                f[y1:y2, x1:x2] = p_rgba
 
-                    writer.append_data(f)
+                frame_filename = os.path.join(frame_dir, f'frame_{i:04d}.png')
+                imageio.imwrite(frame_filename, f)
 
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
         result_filename = f'results/result_voice_{audio_filename}.mov'
-        command = f'ffmpeg -y -i temp/result.mov -i {audio_file_path} -c:v copy -c:a aac -strict -2 {result_filename}'
+        command = f'ffmpeg -y -framerate {fps} -i {frame_dir}/frame_%04d.png -i {audio_file_path} -c:v qtrle -c:a aac -strict -2 {result_filename}'
         subprocess.call(command, shell=True)
 
         result_filenames.append(result_filename)
