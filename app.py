@@ -14,8 +14,6 @@ import argparse
 import audio
 from PIL import Image
 import imageio
-
-
 # 모델 체크포인트 다운로드 함수
 
 def download_checkpoint():
@@ -229,13 +227,14 @@ def load_model(path):
 
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
-    args.face = face_path
+    args.face=face_path
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
-    if args.face.split('.')[-1] in ['jpg', 'png', 'jpeg']:
-        full_frames = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
+    elif args.face.split('.')[1] in ['jpg', 'png', 'jpeg']:
+        full_frames = [cv2.imread(args.face)]
         fps = args.fps
+
     else:
         video_stream = cv2.VideoCapture(args.face)
         fps = video_stream.get(cv2.CAP_PROP_FPS)
@@ -252,7 +251,7 @@ def main(face_path):
                 frame = cv2.resize(frame, (frame.shape[1]//args.resize_factor, frame.shape[0]//args.resize_factor))
 
             if args.rotate:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+                frame = cv2.rotate(frame, cv2.cv2.ROTATE_90_CLOCKWISE)
 
             y1, y2, x1, x2 = args.crop
             if x2 == -1: x2 = frame.shape[1]
@@ -262,11 +261,13 @@ def main(face_path):
 
             full_frames.append(frame)
 
-    print("Number of frames available for inference: " + str(len(full_frames)))
+    print ("Number of frames available for inference: "+str(len(full_frames)))
 
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
+    
     result_filenames = []
-
+    
+    # audio_files 폴더의 모든 오디오 파일에 대해 처리
     for audio_file_name in os.listdir(audio_dir):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
@@ -287,14 +288,14 @@ def main(face_path):
             raise ValueError('Mel contains nan! Using a TTS voice? Add a small epsilon noise to the wav file and try again')
 
         mel_chunks = []
-        mel_idx_multiplier = 80./fps
+        mel_idx_multiplier = 80./fps 
         i = 0
         while 1:
             start_idx = int(i * mel_idx_multiplier)
             if start_idx + mel_step_size > len(mel[0]):
                 mel_chunks.append(mel[:, len(mel[0]) - mel_step_size:])
                 break
-            mel_chunks.append(mel[:, start_idx: start_idx + mel_step_size])
+            mel_chunks.append(mel[:, start_idx : start_idx + mel_step_size])
             i += 1
 
         print("Length of mel chunks: {}".format(len(mel_chunks)))
@@ -304,15 +305,14 @@ def main(face_path):
         batch_size = args.wav2lip_batch_size
         gen = datagen(full_frames.copy(), mel_chunks)
 
-        frame_dir = 'temp/frames'
-        if not os.path.exists(frame_dir):
-            os.makedirs(frame_dir)
-
         for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
                                                 total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
             if i == 0:
                 model = load_model(args.checkpoint_path)
-                print("Model loaded")
+                print ("Model loaded")
+
+                frame_h, frame_w = full_frames[0].shape[:-1]
+                writer = imageio.get_writer('temp/result.avi', fps=fps, codec='libx264', quality=10)
 
             img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
             mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
@@ -321,27 +321,34 @@ def main(face_path):
                 pred = model(mel_batch, img_batch)
 
             pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
-
+            
             for p, f, c in zip(pred, frames, coords):
                 y1, y2, x1, x2 = c
                 p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
 
+                # f 배열의 해당 영역에서 알파 채널을 추출
                 alpha_channel = f[y1:y2, x1:x2, 3]
-                alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))
+                alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
 
+
+    		# p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
                 p_rgba = np.dstack((p, alpha_channel))
+
+    		# f 배열의 특정 영역을 p_rgba로 업데이트
                 f[y1:y2, x1:x2] = p_rgba
+                writer.append_data(f)
 
-                frame_filename = os.path.join(frame_dir, f'frame_{i:04d}.png')
-                imageio.imwrite(frame_filename, f)
+        writer.close()
 
+        # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
-        result_filename = f'results/result_voice_{audio_filename}.mov'
-        command = f'ffmpeg -y -framerate {fps} -i {frame_dir}/frame_%04d.png -i {audio_file_path} -c:v qtrle -c:a aac -strict -2 {result_filename}'
-        subprocess.call(command, shell=True)
+        result_filename = f'results/result_voice_{audio_filename}.mp4'
+        command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
+        subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
 
+    
     return result_filename
 
 # 폴더 내의 모든 파일 삭제 함수
