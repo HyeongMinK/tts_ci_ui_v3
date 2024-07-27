@@ -301,7 +301,7 @@ def main(face_path):
         print("Length of mel chunks: {}".format(len(mel_chunks)))
 
         full_frames = full_frames[:len(mel_chunks)]
-	new_frame = = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
+	new_frame = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
 
         batch_size = args.wav2lip_batch_size
         gen = datagen(new_frame.copy(), mel_chunks)
