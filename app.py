@@ -151,7 +151,6 @@ def face_detect(images):
 
 def datagen(frames, mels):
     img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
-
     if args.box[0] == -1:
         if not args.static:
             face_det_results = face_detect(frames) # BGR2RGB for CNN face detection
@@ -164,7 +163,8 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-        frame_to_save = frames[idx].copy()
+        frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
+        frame_to_save = frame_to_save[idx].copy()
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
@@ -301,10 +301,9 @@ def main(face_path):
         print("Length of mel chunks: {}".format(len(mel_chunks)))
 
         full_frames = full_frames[:len(mel_chunks)]
-        new_frame = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
 
         batch_size = args.wav2lip_batch_size
-        gen = datagen(new_frame.copy(), mel_chunks)
+        gen = datagen(full_frames.copy(), mel_chunks)
 
         for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
                                                 total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
