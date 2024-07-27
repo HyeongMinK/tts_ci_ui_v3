@@ -13,7 +13,7 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
-import imageio
+
 # 모델 체크포인트 다운로드 함수
 
 def download_checkpoint():
@@ -312,7 +312,8 @@ def main(face_path):
                 print ("Model loaded")
 
                 frame_h, frame_w = full_frames[0].shape[:-1]
-                writer = imageio.get_writer('temp/result.avi', fps=fps, codec='libx264', quality=10)
+                out = cv2.VideoWriter('temp/result.avi', 
+                                        cv2.VideoWriter_fourcc(*'DIVX'), fps, (frame_w, frame_h))
 
             img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
             mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
@@ -336,9 +337,9 @@ def main(face_path):
 
     		# f 배열의 특정 영역을 p_rgba로 업데이트
                 f[y1:y2, x1:x2] = p_rgba
-                writer.append_data(f)
+                out.write(f)
 
-        writer.close()
+        out.release()
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
