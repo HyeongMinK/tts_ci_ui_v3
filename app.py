@@ -341,7 +341,7 @@ def main(face_path):
         result_filenames.append(result_filename)
 
     
-    return result_filename
+    return 'temp/result.avi'
 
 # 폴더 내의 모든 파일 삭제 함수
 def clear_directory(directory):
