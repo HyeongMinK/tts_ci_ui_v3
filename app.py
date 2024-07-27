@@ -331,10 +331,10 @@ def main(face_path):
                 alpha_channel = f[y1:y2, x1:x2, 3]
 
     		# p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
-    	        p_rgba = np.dstack((p, alpha_channel))
+                p_rgba = np.dstack((p, alpha_channel))
 
     		# f 배열의 특정 영역을 p_rgba로 업데이트
-    	        f[y1:y2, x1:x2] = p_rgba
+                f[y1:y2, x1:x2] = p_rgba
                 out.write(f)
 
         out.release()
