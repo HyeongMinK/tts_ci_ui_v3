@@ -308,7 +308,8 @@ def main(face_path):
         if not os.path.exists(frame_dir):
             os.makedirs(frame_dir)
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
+                                                total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
             if i == 0:
                 model = load_model(args.checkpoint_path)
                 print("Model loaded")
