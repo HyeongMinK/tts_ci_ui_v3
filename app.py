@@ -149,7 +149,7 @@ def face_detect(images):
     del detector
     return results 
 
-def datagen(frames, mels):
+def datagen(frames, mels, face_path):
     img_batch, mel_batch, frame_batch, coords_batch = [], [], [], []
 
     if args.box[0] == -1:
@@ -164,7 +164,7 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-        frame_to_save = np.array([cv2.imread(args.face, cv2.IMREAD_UNCHANGED)])
+        frame_to_save = np.array([cv2.imread(face_path, cv2.IMREAD_UNCHANGED)])
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
@@ -303,7 +303,7 @@ def main(face_path):
         full_frames = full_frames[:len(mel_chunks)]
 
         batch_size = args.wav2lip_batch_size
-        gen = datagen(full_frames.copy(), mel_chunks)
+        gen = datagen(full_frames.copy(), mel_chunks, face_path)
 
         for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
                                                 total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
