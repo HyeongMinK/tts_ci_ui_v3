@@ -164,7 +164,7 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-        frame_to_save = frames[idx].copy()
+        frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
@@ -341,7 +341,7 @@ def main(face_path):
         result_filenames.append(result_filename)
 
     
-    return 'temp/result.avi'
+    return result_filename
 
 # 폴더 내의 모든 파일 삭제 함수
 def clear_directory(directory):
