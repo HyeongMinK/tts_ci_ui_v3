@@ -227,7 +227,7 @@ def load_model(path):
 
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
-    args.face=face_path
+    args.face = face_path
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -248,10 +248,10 @@ def main(face_path):
                 video_stream.release()
                 break
             if args.resize_factor > 1:
-                frame = cv2.resize(frame, (frame.shape[1]//args.resize_factor, frame.shape[0]//args.resize_factor))
+                frame = cv2.resize(frame, (frame.shape[1] // args.resize_factor, frame.shape[0] // args.resize_factor))
 
             if args.rotate:
-                frame = cv2.rotate(frame, cv2.cv2.ROTATE_90_CLOCKWISE)
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 
             y1, y2, x1, x2 = args.crop
             if x2 == -1: x2 = frame.shape[1]
@@ -261,24 +261,17 @@ def main(face_path):
 
             full_frames.append(frame)
 
-    print ("Number of frames available for inference: "+str(len(full_frames)))
+    print("Number of frames available for inference: " + str(len(full_frames)))
 
     audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_files")
-    
+
     result_filenames = []
-    
-    # audio_files 폴더의 모든 오디오 파일에 대해 처리
+
     for audio_file_name in os.listdir(audio_dir):
         audio_file_path = os.path.join(audio_dir, audio_file_name)
         if not audio_file_path.endswith('.wav'):
             print(f'Skipping non-wav file: {audio_file_path}')
             continue
-
-        if not audio_file_path.endswith('.wav'):
-            print('Extracting raw audio...')
-            command = 'ffmpeg -y -i {} -strict -2 {}'.format(audio_file_path, 'temp/temp.wav')
-            subprocess.call(command, shell=True)
-            audio_file_path = 'temp/temp.wav'
 
         wav = audio.load_wav(audio_file_path, 16000)
         mel = audio.melspectrogram(wav)
@@ -288,14 +281,14 @@ def main(face_path):
             raise ValueError('Mel contains nan! Using a TTS voice? Add a small epsilon noise to the wav file and try again')
 
         mel_chunks = []
-        mel_idx_multiplier = 80./fps 
+        mel_idx_multiplier = 80. / fps
         i = 0
         while 1:
             start_idx = int(i * mel_idx_multiplier)
             if start_idx + mel_step_size > len(mel[0]):
                 mel_chunks.append(mel[:, len(mel[0]) - mel_step_size:])
                 break
-            mel_chunks.append(mel[:, start_idx : start_idx + mel_step_size])
+            mel_chunks.append(mel[:, start_idx: start_idx + mel_step_size])
             i += 1
 
         print("Length of mel chunks: {}".format(len(mel_chunks)))
@@ -307,14 +300,13 @@ def main(face_path):
 
         video_frames = []
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen, 
-                                                total=int(np.ceil(float(len(mel_chunks))/batch_size)))):
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen,
+                                                                        total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
             if i == 0:
                 model = load_model(args.checkpoint_path)
-                print ("Model loaded")
+                print("Model loaded")
 
                 frame_h, frame_w = full_frames[0].shape[:-1]
-            
 
             img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(device)
             mel_batch = torch.FloatTensor(np.transpose(mel_batch, (0, 3, 1, 2))).to(device)
@@ -323,7 +315,7 @@ def main(face_path):
                 pred = model(mel_batch, img_batch)
 
             pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
-            
+
             for p, f, c in zip(pred, frames, coords):
                 y1, y2, x1, x2 = c
                 p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
@@ -332,11 +324,10 @@ def main(face_path):
                 alpha_channel = f[y1:y2, x1:x2, 3]
                 alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
 
-
-    		# p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
+                # p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
                 p_rgba = np.dstack((p, alpha_channel))
 
-    		# f 배열의 특정 영역을 p_rgba로 업데이트
+                # f 배열의 특정 영역을 p_rgba로 업데이트
                 f[y1:y2, x1:x2] = p_rgba
                 video_frames.append(f)
 
@@ -346,21 +337,21 @@ def main(face_path):
         for idx, frame in enumerate(video_frames):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
 
-        # ffmpeg 명령어로 프레임을 비디오로 변환 (RGBA 지원)
-        output_video_path = 'temp/result.avi'
-        command = f'ffmpeg -y -framerate {{fps}} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -vf "format=rgba" -c:v qtrle {output_video_path}'
+        # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
+        output_video_path = 'temp/result.mov'
+        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
         subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
         result_filename = f'results/result_voice_{audio_filename}.mov'
-        command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v qtrle -c:a aac -strict experimental {result_filename}'
+        command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental {result_filename}'
         subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
 
-    
-    return 'temp/result.avi'
+    return result_filename
+
 
 # 폴더 내의 모든 파일 삭제 함수
 def clear_directory(directory):
