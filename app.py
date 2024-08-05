@@ -175,7 +175,7 @@ def datagen(frames, mels):
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
         frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
-        #frame_to_save = frame_to_save[idx].copy()
+        frame_to_save = frame_to_save[idx].copy()
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
@@ -345,8 +345,11 @@ def main(face_path):
         # 임시 디렉토리에 개별 프레임 저장
         temp_dir = 'temp_frames'
         os.makedirs(temp_dir, exist_ok=True)
+        first_frame_path = None  # 첫 프레임 경로를 저장할 변수 
         for idx, frame in enumerate(video_frames):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
+            if idx == 0:
+                first_frame_path = frame_path  # 첫 번째 프레임 경로 저장
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
         output_video_path = 'temp/result.mov'
@@ -361,7 +364,7 @@ def main(face_path):
 
         result_filenames.append(result_filename)
 
-    return 'temp/result.mov'
+    return first_frame_path
 
 
 # 폴더 내의 모든 파일 삭제 함수
