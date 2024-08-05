@@ -15,7 +15,6 @@ import audio
 from PIL import Image
 import base64
 
-first_frame_path = None  # 첫 프레임 경로를 저장할 변수
 audio_ex_files = {
     "Alloy": "audio_sample/alloy.mp3",
     "Echo": "audio_sample/echo.mp3",
@@ -347,12 +346,10 @@ def main(face_path):
         os.makedirs(temp_dir, exist_ok=True) 
         for idx, frame in enumerate(video_frames):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
-            if idx == 0:
-                first_frame_path = f"{temp_dir}/frame_{idx:04d}.png"  # 첫 번째 프레임 경로 저장
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
         output_video_path = 'temp/result.mov'
-        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
+        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt rgba {output_video_path}'
         subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
@@ -363,7 +360,7 @@ def main(face_path):
 
         result_filenames.append(result_filename)
 
-    return first_frame_path
+    return result_filename
 
 
 # 폴더 내의 모든 파일 삭제 함수
