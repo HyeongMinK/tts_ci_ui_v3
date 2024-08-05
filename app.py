@@ -15,7 +15,7 @@ import audio
 from PIL import Image
 import base64
 
-
+first_frame_path = None  # 첫 프레임 경로를 저장할 변수
 audio_ex_files = {
     "Alloy": "audio_sample/alloy.mp3",
     "Echo": "audio_sample/echo.mp3",
@@ -344,8 +344,7 @@ def main(face_path):
 
         # 임시 디렉토리에 개별 프레임 저장
         temp_dir = 'temp_frames'
-        os.makedirs(temp_dir, exist_ok=True)
-        first_frame_path = None  # 첫 프레임 경로를 저장할 변수 
+        os.makedirs(temp_dir, exist_ok=True) 
         for idx, frame in enumerate(video_frames):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
             if idx == 0:
