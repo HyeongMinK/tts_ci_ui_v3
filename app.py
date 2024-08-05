@@ -335,6 +335,9 @@ def main(face_path):
                 alpha_channel = f[y1:y2, x1:x2, 3]
                 alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
 
+                # 알파 채널을 0으로 설정
+                alpha_channel = np.zeros((y2 - y1, x2 - x1), dtype=np.uint8)
+
                 # p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
                 p_rgba = np.dstack((p, alpha_channel))
 
