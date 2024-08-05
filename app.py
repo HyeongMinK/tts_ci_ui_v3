@@ -13,6 +13,17 @@ from models import Wav2Lip
 import argparse
 import audio
 from PIL import Image
+import base64
+
+
+audio_ex_files = {
+    "Alloy": "audio_sample/alloy.mp3",
+    "Echo": "audio_sample/echo.mp3",
+    "Fable": "audio_sample/fable.mp3",
+    "Onyx": "audio_sample/onyx.mp3",
+    "Nova": "audio_sample/nova.mp3",
+    "Shimmer": "audio_sample/shimmer.mp3"
+}
 
 # 모델 체크포인트 다운로드 함수
 
@@ -415,25 +426,34 @@ if __name__ == '__main__':
         # 이미지 파일 업로드 위젯 추가
         uploaded_img_file = st.file_uploader("이미지 파일을 업로드 하세요", type=["jpg", "jpeg", "png"])
 
-        if uploaded_img_file is not None:
-            # 업로드된 파일을 pic_files 폴더에 저장
-            img_save_path = os.path.join("pic_files", uploaded_img_file.name)
-            
-            # 디렉토리가 없으면 생성
-            if not os.path.exists("pic_files"):
-                os.makedirs("pic_files")
-
-            # 파일 저장
-            with open(img_save_path, "wb") as f:
-                f.write(uploaded_img_file.getvalue())
-
-            # 업로드된 이미지 파일을 열고 화면에 표시
-            img = Image.open(img_save_path)
-            st.image(img, caption="업로드된 이미지", width=200)
 
         if uploaded_file is not None and uploaded_img_file is not None:
-            voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
-            selected_voice = st.radio("Select a voice option for TTS", voice_options, index=1)  # Default to "Echo"
+            col1_tone, col2_file_uploader = st.columns([1, 1])
+            with col1_tone:
+                # 업로드된 파일을 pic_files 폴더에 저장
+                img_save_path = os.path.join("pic_files", uploaded_img_file.name)
+            
+                # 디렉토리가 없으면 생성
+                if not os.path.exists("pic_files"):
+                    os.makedirs("pic_files")
+
+            # 파일 저장
+                with open(img_save_path, "wb") as f:
+                    f.write(uploaded_img_file.getvalue())
+
+            # 업로드된 이미지 파일을 열고 화면에 표시
+                img = Image.open(img_save_path)
+                st.image(img, caption="업로드된 이미지", width=200)
+
+                voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+                selected_voice = st.radio("Select a voice option for TTS", voice_options, index=0, help="Previews can be found [here](https://platform.openai.com/docs/guides/text-to-speech/voice-options)")
+            with col2_file_uploader:
+                st.markdown("**Audio Samples:**")
+                for name, file_path in audio_ex_files.items():
+                    st.write(f"***{name}***")
+                    audio_html = get_audio_html(file_path)
+                    st.markdown(audio_html, unsafe_allow_html=True)
+            
 
             # 선택된 결과를 변수에 저장
             st.session_state.selected_voice = selected_voice
@@ -459,5 +479,26 @@ if __name__ == '__main__':
                             label=f"Download {os.path.basename(result_filename)}",
                             data=f,
                             file_name=os.path.basename(result_filename),
-                            mime="video/mp4"
+                            mime="video/mov"
                         )
+st.markdown(
+    """
+    <style>
+    .small-text {
+        font-size: 10px;   /* 글씨 크기 설정 */
+        color: gray;       /* 텍스트 색상 설정 */
+        position: relative;/* 상대 위치 설정 */
+        bottom: -150px;    /* 페이지 하단에서 150px 위로 */
+        width: 100%;       /* 너비를 페이지 전체로 설정 */
+        text-align: right;/* 가운데 정렬 */
+        background-color: white; /* 배경색 설정 */
+        line-height: 1.2;  /* 줄 간격 설정 */
+    }
+    </style>
+    <p class="small-text">Digital Wellness Lab 2024<br>
+        Business Analytics, School of Management<br>
+        Kyung Hee University<br>
+        Maintained by HyeongMin Kim & Sangwon Kim</p>
+    """,
+    unsafe_allow_html=True
+)
