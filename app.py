@@ -379,6 +379,16 @@ def clear_directory(directory):
             except Exception as e:
                 st.error(f"Failed to delete {file_path}. Reason: {e}")
 
+def get_audio_html(file_path):
+    audio_bytes = open(file_path, "rb").read()
+    b64_audio = base64.b64encode(audio_bytes).decode()
+    audio_html = f"""
+    <audio controls style="width:300px; height:25px;">
+        <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
+    </audio>
+    """
+    return audio_html
+
 
 if __name__ == '__main__':
     st.title("TTS 립싱크 영상 생성기")
