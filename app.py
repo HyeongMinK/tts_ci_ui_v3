@@ -348,7 +348,7 @@ def main(face_path):
         for idx, frame in enumerate(video_frames):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
             if idx == 0:
-                first_frame_path = frame_path  # 첫 번째 프레임 경로 저장
+                first_frame_path = f"{temp_dir}/frame_{idx:04d}.png"  # 첫 번째 프레임 경로 저장
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
         output_video_path = 'temp/result.mov'
