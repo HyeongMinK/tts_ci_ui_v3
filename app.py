@@ -349,7 +349,7 @@ def main(face_path):
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
         output_video_path = 'temp/result.avi'
-        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v huffyuv -pix_fmt rgba {output_video_path}'
+        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v ffv1 -pix_fmt rgba {output_video_path}'
         subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
