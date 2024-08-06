@@ -354,7 +354,7 @@ def main(face_path):
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
-        result_filename = f'results/result_voice_{audio_filename}.mov'
+        result_filename = f'results/result_voice_{audio_filename}.avi'
         command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental {result_filename}'
         subprocess.call(command, shell=platform.system() != 'Windows')
 
