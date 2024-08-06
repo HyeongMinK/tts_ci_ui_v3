@@ -348,7 +348,7 @@ def main(face_path):
             cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
-        output_video_path = 'temp/result.mov'
+        output_video_path = 'temp/result.avi'
         command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v huffyuv -pix_fmt rgba {output_video_path}'
         subprocess.call(command, shell=True)
 
