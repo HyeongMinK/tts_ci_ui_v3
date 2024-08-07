@@ -354,7 +354,7 @@ def main(face_path):
 
 
         command = [
-        'ffmpeg', '-i', input_video_path,
+        'ffmpeg', '-i', output_video_path,
         '-i', args.face,
         '-filter_complex', 'overlay=W-w-10:H-h-10',
         '-c:v', 'prores_ks',
