@@ -404,6 +404,7 @@ if __name__ == '__main__':
             clear_directory("pic_files")
             clear_directory("results")
             clear_directory("audio_files")
+            clear_directory("temp_frames")
             st.session_state.process_started = True
             st.rerun()
             
