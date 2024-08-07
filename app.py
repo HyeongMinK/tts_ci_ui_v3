@@ -352,18 +352,6 @@ def main(face_path):
         command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
         subprocess.call(command, shell=True)
 
-
-        command = [
-        'ffmpeg', '-i', output_video_path,
-        '-i', args.face,
-        '-filter_complex', 'overlay=W-w-10:H-h-10',
-        '-c:v', 'prores_ks',
-        '-profile:v', '4444',
-        '-pix_fmt', 'yuva444p10le',
-        output_video_path
-        ]
-        subprocess.call(command)
-
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
         result_filename = f'results/result_voice_{audio_filename}.mov'
