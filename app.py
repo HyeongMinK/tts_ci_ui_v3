@@ -86,7 +86,7 @@ parser.add_argument('--face_det_batch_size', type=int,
                     help='Batch size for face detection', default=8)
 parser.add_argument('--wav2lip_batch_size', type=int, help='Batch size for Wav2Lip model(s)', default=48)
 
-parser.add_argument('--resize_factor', default=1, type=int, 
+parser.add_argument('--resize_factor', default=3, type=int, 
             help='Reduce the resolution by this factor. Sometimes, best results are obtained at 480p or 720p')
 
 parser.add_argument('--crop', nargs='+', type=int, default=[0, -1, 0, -1], 
@@ -349,7 +349,7 @@ def main(face_path):
 
         # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
         output_video_path = 'temp/result.mov'
-        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt rgba {output_video_path}'
+        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
         subprocess.call(command, shell=True)
 
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
