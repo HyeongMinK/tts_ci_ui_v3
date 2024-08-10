@@ -14,6 +14,7 @@ import argparse
 import audio
 from PIL import Image
 import base64
+from rembg import remove
 
 
 if "choose_tp" not in st.session_state:
@@ -65,6 +66,54 @@ def create_tts_files(api_key, txt_n, input_voice):
     
     output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(txt_n)[0]}.wav")
     text_to_speech(client, text, output_audio_path, input_voice)
+
+# 이미지의 크기를 조정하고, 배경을 제거하는 함수
+def process_image(image_path, output_path, target_height):
+    if st.session_state.choose_tp:
+        # 배경 제거
+        with open(image_path, 'rb') as i:
+            input_data = i.read()
+            output_data = remove(input_data)
+
+        # 배경이 제거된 이미지를 임시로 저장
+        with open('temp_no_bg.png', 'wb') as o:
+            o.write(output_data)
+
+        # 배경이 제거된 이미지 열기
+        image = Image.open('temp_no_bg.png').convert("RGBA")
+        
+        # 알파 채널 조정 (RGBA 값이 (0, 0, 0, 0)이 아닌 경우 알파 값을 255로 설정)
+        pixels = image.load()
+        width, height = image.size
+        for y in range(height):
+            for x in range(width):
+                r, g, b, a = pixels[x, y]
+                if (r, g, b, a) != (0, 0, 0, 0):
+                    pixels[x, y] = (r, g, b, 255)
+    else:
+        # 배경 제거가 필요하지 않다면 원본 이미지를 사용
+        image = Image.open(image_path).convert("RGBA")
+
+    # 이미지 리사이징
+    resized_image = resize_image_based_on_height(image, target_height)
+    
+    # 리사이징된 이미지 저장
+    resized_image.save(output_path)
+
+def resize_image_based_on_height(image, target_height):
+    # 현재 이미지 크기 가져오기
+    original_width, original_height = image.size
+
+    # 세로 크기를 target_height로 조정
+    scale_factor = target_height / original_height
+
+    # 새로운 가로 크기 계산
+    new_width = int(original_width * scale_factor)
+
+    # 이미지 리사이징 (LANCZOS 사용)
+    resized_image = image.resize((new_width, target_height), Image.LANCZOS)
+
+    return resized_image  # 리사이징된 이미지를 반환
 
 # Wav2Lip 코드
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -246,6 +295,7 @@ def load_model(path):
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
     args.face = face_path
+    process_image(args.face, args.face, 250)
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
@@ -492,7 +542,7 @@ if __name__ == '__main__':
                     audio_html = get_audio_html(file_path)
                     st.markdown(audio_html, unsafe_allow_html=True)
                 
-                st.session_state.choose_tp=st.toggle("Remove Background(available in Mac)")
+                st.session_state.choose_tp=st.toggle("Remove Background (Available in Mac)")
        
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
