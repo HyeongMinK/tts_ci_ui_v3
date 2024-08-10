@@ -100,8 +100,8 @@ def process_image(image_path, output_path, target_height):
                 if (r, g, b, a) != (0, 0, 0, 0):
                     pixels[x, y] = (r, g, b, 255)
     else:
-        # 배경 제거가 필요하지 않다면 원본 이미지를 사용
-        image = Image.open(image_path).convert("RGBA")
+        # 배경 제거가 필요하지 않다면 RGB 형식으로 이미지를 열기
+        image = Image.open(image_path).convert("RGB")
 
     # 이미지 리사이징
     resized_image = resize_image_based_on_height(image, target_height)
@@ -379,8 +379,7 @@ def main(face_path):
 
         video_frames = []
 
-        for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen,
-                                                                        total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
+        for i, (img_batch, mel_batch, frames, coords) in enumerate(gen):
             if i == 0:
                 model = load_model(args.checkpoint_path)
                 print("Model loaded")
