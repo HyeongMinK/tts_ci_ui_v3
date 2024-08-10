@@ -71,6 +71,8 @@ def create_tts_files(api_key, txt_n, input_voice):
 def process_image(image_path, output_path, target_height):
     if st.session_state.choose_tp:
         # 배경 제거
+        os.environ['DISABLE_TQDM'] = '1'  # tqdm 비활성화
+        # 배경 제거
         with open(image_path, 'rb') as i:
             input_data = i.read()
             output_data = remove(input_data)
