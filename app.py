@@ -16,9 +16,6 @@ from PIL import Image
 import base64
 from rembg import remove
 
-# tqdm을 사용하지 않도록 설정
-os.environ['DISABLE_TQDM'] = '1'
-
 
 if "choose_tp" not in st.session_state:
     st.session_state.choose_tp = False
@@ -33,11 +30,18 @@ audio_ex_files = {
 }
 
 # 모델 체크포인트 다운로드 함수
-
 def download_checkpoint():
+    # Wav2Lip 체크포인트 다운로드
     checkpoint_path = 'checkpoints/wav2lip.pth'
     if not os.path.exists(checkpoint_path):
         url = 'https://drive.google.com/uc?id=1xhqGmoS2wrEbY1h4SCQcqYra4NpLt7fS'
+        gdown.download(url, checkpoint_path, quiet=False)
+
+    # U^2-Net 체크포인트 다운로드
+    checkpoint_path = '/root/.u2net/u2net.onnx'
+    if not os.path.exists(checkpoint_path):
+        url = 'https://drive.google.com/uc?id=1naGIU2vfNGM4nrsmFj1fCVCT9oZI7ajM'
+        os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)  # 디렉토리가 없으면 생성
         gdown.download(url, checkpoint_path, quiet=False)
 
 
