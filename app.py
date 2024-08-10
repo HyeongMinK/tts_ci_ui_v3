@@ -108,6 +108,8 @@ def process_image(image_path, output_path, target_height):
     
     # 리사이징된 이미지 저장
     resized_image.save(output_path)
+    
+    arg.face = output_path
 
 def resize_image_based_on_height(image, target_height):
     # 현재 이미지 크기 가져오기
@@ -304,7 +306,7 @@ def load_model(path):
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
     args.face = face_path
-    process_image(args.face, args.face, 250)
+    process_image(args.face, 'output.png', 250)
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
