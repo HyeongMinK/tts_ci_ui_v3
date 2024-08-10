@@ -177,7 +177,7 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-	if st.session_state.choose_tp:
+        if st.session_state.choose_tp:
             frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
             frame_to_save = frame_to_save[idx].copy()
         else:
