@@ -38,8 +38,10 @@ def download_checkpoint():
         gdown.download(url, checkpoint_path, quiet=False)
 
     # U^2-Net 체크포인트 다운로드
-    checkpoint_path = '/root/.u2net/u2net.onnx'
+    user_home_dir = os.path.expanduser("~")
+    checkpoint_path = os.path.join(user_home_dir, ".u2net/u2net.onnx")
     if not os.path.exists(checkpoint_path):
+        # Google Drive의 u2net.onnx 파일 링크를 올바른 형식으로 수정
         url = 'https://drive.google.com/uc?id=1naGIU2vfNGM4nrsmFj1fCVCT9oZI7ajM'
         os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)  # 디렉토리가 없으면 생성
         gdown.download(url, checkpoint_path, quiet=False)
