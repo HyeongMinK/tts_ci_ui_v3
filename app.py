@@ -92,13 +92,13 @@ def process_image(image_path, output_path, target_height):
         image = Image.open('temp_no_bg.png').convert("RGBA")
         
         # 알파 채널 조정 (RGBA 값이 (0, 0, 0, 0)이 아닌 경우 알파 값을 255로 설정)
-        pixels = image.load()
-        width, height = image.size
-        for y in range(height):
-            for x in range(width):
-                r, g, b, a = pixels[x, y]
-                if (r, g, b, a) != (0, 0, 0, 0) and a <=90:
-                    pixels[x, y] = (r, g, b, 0)
+        #pixels = image.load()
+        #width, height = image.size
+        #for y in range(height):
+            #for x in range(width):
+                #r, g, b, a = pixels[x, y]
+                #if (r, g, b, a) != (0, 0, 0, 0):
+                    #pixels[x, y] = (r, g, b, 255)
     else:
         # 배경 제거가 필요하지 않다면 RGB 형식으로 이미지를 열기
         image = Image.open(image_path).convert("RGB")
