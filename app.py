@@ -15,6 +15,10 @@ import audio
 from PIL import Image
 import base64
 
+
+if "choose_tp" not in st.session_state:
+    st.session_state.choose_tp = False
+
 audio_ex_files = {
     "Alloy": "audio_sample/alloy.mp3",
     "Echo": "audio_sample/echo.mp3",
@@ -415,8 +419,6 @@ if __name__ == '__main__':
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
 
-    if "choose_tp" not in st.session_state:
-        st.session_state.choose_tp = False
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
