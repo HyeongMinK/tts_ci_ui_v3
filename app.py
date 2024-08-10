@@ -16,6 +16,9 @@ from PIL import Image
 import base64
 from rembg import remove
 
+# tqdm을 사용하지 않도록 설정
+os.environ['DISABLE_TQDM'] = '1'
+
 
 if "choose_tp" not in st.session_state:
     st.session_state.choose_tp = False
@@ -70,8 +73,6 @@ def create_tts_files(api_key, txt_n, input_voice):
 # 이미지의 크기를 조정하고, 배경을 제거하는 함수
 def process_image(image_path, output_path, target_height):
     if st.session_state.choose_tp:
-        # 배경 제거
-        os.environ['DISABLE_TQDM'] = '1'  # tqdm 비활성화
         # 배경 제거
         with open(image_path, 'rb') as i:
             input_data = i.read()
