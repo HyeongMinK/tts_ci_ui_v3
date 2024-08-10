@@ -304,9 +304,9 @@ def load_model(path):
 
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
-    args.face = face_path
-    process_image(args.face, 'output.png', 250)
-    args.face = 'output.png'
+    #args.face = face_path
+    #process_image(args.face, 'output.png', 250)
+    #args.face = 'output.png'
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
 
