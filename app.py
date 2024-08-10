@@ -86,7 +86,7 @@ parser.add_argument('--face_det_batch_size', type=int,
                     help='Batch size for face detection', default=8)
 parser.add_argument('--wav2lip_batch_size', type=int, help='Batch size for Wav2Lip model(s)', default=48)
 
-parser.add_argument('--resize_factor', default=3, type=int, 
+parser.add_argument('--resize_factor', default=1, type=int, 
             help='Reduce the resolution by this factor. Sometimes, best results are obtained at 480p or 720p')
 
 parser.add_argument('--crop', nargs='+', type=int, default=[0, -1, 0, -1], 
@@ -173,8 +173,12 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-        frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
-        frame_to_save = frame_to_save[idx].copy()
+	if st.session_state.choose_tp:
+            frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
+            frame_to_save = frame_to_save[idx].copy()
+        else:
+            frame_to_save = frames[idx].copy()
+
         face, coords = face_det_results[idx].copy()
 
         face = cv2.resize(face, (args.img_size, args.img_size))
@@ -329,34 +333,50 @@ def main(face_path):
             for p, f, c in zip(pred, frames, coords):
                 y1, y2, x1, x2 = c
                 p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
+               
+  
+                if st.session_state.choose_tp:
+                    # f 배열의 해당 영역에서 알파 채널을 추출
+                    alpha_channel = f[y1:y2, x1:x2, 3]
+                    alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
 
-                # f 배열의 해당 영역에서 알파 채널을 추출
-                alpha_channel = f[y1:y2, x1:x2, 3]
-                alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
+                    # p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
+                    p_rgba = np.dstack((p, alpha_channel))
 
-                # p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
-                p_rgba = np.dstack((p, alpha_channel))
+                    # f 배열의 특정 영역을 p_rgba로 업데이트
+                    f[y1:y2, x1:x2] = p_rgba
+                    video_frames.append(f)
+                else:
+                    f[y1:y2, x1:x2] = p
+                    out.write(f)
+         
+        if st.session_state.choose_tp:
+            # 임시 디렉토리에 개별 프레임 저장
+            temp_dir = 'temp_frames'
+            os.makedirs(temp_dir, exist_ok=True) 
+            for idx, frame in enumerate(video_frames):
+                cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
 
-                # f 배열의 특정 영역을 p_rgba로 업데이트
-                f[y1:y2, x1:x2] = p_rgba
-                video_frames.append(f)
+            # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
+            output_video_path = 'temp/result.mov'
+            command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
+            subprocess.call(command, shell=True)
 
-        # 임시 디렉토리에 개별 프레임 저장
-        temp_dir = 'temp_frames'
-        os.makedirs(temp_dir, exist_ok=True) 
-        for idx, frame in enumerate(video_frames):
-            cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
+        else:
+            out.release()
 
-        # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
-        output_video_path = 'temp/result.mov'
-        command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
-        subprocess.call(command, shell=True)
-
+        
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
-        result_filename = f'results/result_voice_{audio_filename}.mov'
-        command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental {result_filename}'
-        subprocess.call(command, shell=platform.system() != 'Windows')
+
+        if st.session_state.choose_tp:
+            result_filename = f'results/result_voice_{audio_filename}.mov'
+            command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental {result_filename}'
+            subprocess.call(command, shell=platform.system() != 'Windows')
+        else:
+            result_filename = f'results/result_voice_{audio_filename}.mp4'
+            command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
+            subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
 
@@ -394,6 +414,9 @@ if __name__ == '__main__':
 
     if "process_started" not in st.session_state:
         st.session_state.process_started = False
+
+    if "choose_tp" not in st.session_state:
+        st.session_state.choose_tp = False
 
     if not st.session_state.process_started:
         if st.button("영상 만들기 시작하기"):
@@ -457,18 +480,18 @@ if __name__ == '__main__':
 
                 voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
                 selected_voice = st.radio("Select a voice option for TTS", voice_options, index=0, help="Previews can be found [here](https://platform.openai.com/docs/guides/text-to-speech/voice-options)")
+                # 선택된 결과를 변수에 저장
+                st.session_state.selected_voice = selected_voice
+
             with col2_file_uploader:
                 st.markdown("**Audio Samples:**")
                 for name, file_path in audio_ex_files.items():
                     st.write(f"***{name}***")
                     audio_html = get_audio_html(file_path)
                     st.markdown(audio_html, unsafe_allow_html=True)
-            
-
-            # 선택된 결과를 변수에 저장
-            st.session_state.selected_voice = selected_voice
-
-            
+                
+                st.session_state.choose_tp=st.toggle("Remove Background(available in Mac)")
+       
             # Streamlit 버튼을 추가하여 TTS 파일 생성 및 Wav2Lip 실행을 트리거
             if st.button("립싱크 영상 생성하기"):
                 clear_directory("audio_files")
