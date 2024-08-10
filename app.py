@@ -304,7 +304,7 @@ def load_model(path):
 
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
-    #args.face = face_path
+    args.face = face_path
     #process_image(args.face, 'output.png', 250)
     #args.face = 'output.png'
     if not os.path.isfile(args.face):
