@@ -97,8 +97,8 @@ def process_image(image_path, output_path, target_height):
         for y in range(height):
             for x in range(width):
                 r, g, b, a = pixels[x, y]
-                if (r, g, b, a) != (0, 0, 0, 0):
-                    pixels[x, y] = (r, g, b, 255)
+                if (r, g, b, a) != (0, 0, 0, 0) and a !=255 :
+                    pixels[x, y] = (r, g, b, 50)
     else:
         # 배경 제거가 필요하지 않다면 RGB 형식으로 이미지를 열기
         image = Image.open(image_path).convert("RGB")
