@@ -78,37 +78,36 @@ def create_tts_files(api_key, txt_n, input_voice):
 
 # 이미지의 크기를 조정하고, 배경을 제거하는 함수
 def process_image(image_path, output_path, target_height):
-    # 1단계: 이미지 리사이징
-    image = Image.open(image_path)
-    resized_image = resize_image_based_on_height(image, target_height)
-    
-    # 2단계: 배경 제거 (st.session_state.choose_tp가 True인 경우)
     if st.session_state.choose_tp:
-        # 리사이징된 이미지 데이터를 바이트로 변환
-        with open(output_path, 'wb') as temp_file:
-            resized_image.save(temp_file, format='PNG')
-        
-        with open(output_path, 'rb') as temp_file:
-            input_data = temp_file.read()
+        # 배경 제거
+        with open(image_path, 'rb') as i:
+            input_data = i.read()
             output_data = remove(input_data)
 
-        # 배경이 제거된 이미지를 열기
-        image = Image.open(output_data).convert("RGBA")
-        
-        # 알파 채널 조정 (원하면 이 부분을 다시 활성화)
-        # pixels = image.load()
-        # width, height = image.size
-        # for y in range(height):
-        #     for x in range(width):
-        #         r, g, b, a = pixels[x, y]
-        #         if (r, g, b, a) != (0, 0, 0, 0):
-        #             pixels[x, y] = (r, g, b, 255)
+        # 배경이 제거된 이미지를 임시로 저장
+        with open('temp_no_bg.png', 'wb') as o:
+            o.write(output_data)
 
-        # 최종 이미지 저장
-        image.save(output_path)
+        # 배경이 제거된 이미지 열기
+        image = Image.open('temp_no_bg.png').convert("RGBA")
+        
+        # 알파 채널 조정 (RGBA 값이 (0, 0, 0, 0)이 아닌 경우 알파 값을 255로 설정)
+        #pixels = image.load()
+        #width, height = image.size
+        #for y in range(height):
+            #for x in range(width):
+                #r, g, b, a = pixels[x, y]
+                #if (r, g, b, a) != (0, 0, 0, 0):
+                    #pixels[x, y] = (r, g, b, 255)
     else:
-        # 배경 제거가 필요하지 않은 경우, 리사이징된 이미지를 그대로 저장
-        resized_image.save(output_path)
+        # 배경 제거가 필요하지 않다면 RGB 형식으로 이미지를 열기
+        image = Image.open(image_path).convert("RGB")
+
+    # 이미지 리사이징
+    resized_image = resize_image_based_on_height(image, target_height)
+    
+    # 리사이징된 이미지 저장
+    resized_image.save(output_path)
     
 
 def resize_image_based_on_height(image, target_height):
