@@ -13,3 +13,4 @@ scipy
 pillow
 imageio
 imageio[ffmpeg]
+rembg
