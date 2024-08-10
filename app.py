@@ -15,6 +15,7 @@ import audio
 from PIL import Image
 import base64
 from rembg import remove
+import io
 
 
 if "choose_tp" not in st.session_state:
@@ -76,40 +77,7 @@ def create_tts_files(api_key, txt_n, input_voice):
     output_audio_path = os.path.join(audio_dir, f"{os.path.splitext(txt_n)[0]}.wav")
     text_to_speech(client, text, output_audio_path, input_voice)
 
-# 이미지의 크기를 조정하고, 배경을 제거하는 함수
-def process_image(image_path, output_path, target_height):
-    if st.session_state.choose_tp:
-        # 배경 제거
-        with open(image_path, 'rb') as i:
-            input_data = i.read()
-            output_data = remove(input_data)
-
-        # 배경이 제거된 이미지를 임시로 저장
-        with open('temp_no_bg.png', 'wb') as o:
-            o.write(output_data)
-
-        # 배경이 제거된 이미지 열기
-        image = Image.open('temp_no_bg.png').convert("RGBA")
-        
-        # 알파 채널 조정 (RGBA 값이 (0, 0, 0, 0)이 아닌 경우 알파 값을 255로 설정)
-        #pixels = image.load()
-        #width, height = image.size
-        #for y in range(height):
-            #for x in range(width):
-                #r, g, b, a = pixels[x, y]
-                #if (r, g, b, a) != (0, 0, 0, 0):
-                    #pixels[x, y] = (r, g, b, 255)
-    else:
-        # 배경 제거가 필요하지 않다면 RGB 형식으로 이미지를 열기
-        image = Image.open(image_path).convert("RGB")
-
-    # 이미지 리사이징
-    resized_image = resize_image_based_on_height(image, target_height)
-    
-    # 리사이징된 이미지 저장
-    resized_image.save(output_path)
-    
-
+# 이미지 크기를 조정하는 함수
 def resize_image_based_on_height(image, target_height):
     # 현재 이미지 크기 가져오기
     original_width, original_height = image.size
@@ -124,6 +92,38 @@ def resize_image_based_on_height(image, target_height):
     resized_image = image.resize((new_width, target_height), Image.LANCZOS)
 
     return resized_image  # 리사이징된 이미지를 반환
+
+# 이미지의 크기를 조정하고, 배경을 제거하는 함수
+def process_image(image_path, output_path, target_height):
+    # 1단계: 이미지 리사이징
+    image = Image.open(image_path)
+    resized_image = resize_image_based_on_height(image, target_height)
+    
+    # 2단계: 배경 제거 (st.session_state.choose_tp가 True인 경우)
+    if st.session_state.choose_tp:
+        # 리사이징된 이미지를 메모리에 저장
+        with io.BytesIO() as output:
+            resized_image.save(output, format="PNG")
+            input_data = output.getvalue()
+            output_data = remove(input_data)
+
+        # 바이트 데이터를 파일처럼 읽기
+        image = Image.open(io.BytesIO(output_data)).convert("RGBA")
+        
+        # 알파 채널 조정 (원하면 이 부분을 다시 활성화)
+        # pixels = image.load()
+        # width, height = image.size
+        # for y in range(height):
+        #     for x in range(width):
+        #         r, g, b, a = pixels[x, y]
+        #         if (r, g, b, a) != (0, 0, 0, 0):
+        #             pixels[x, y] = (r, g, b, 255)
+
+        # 최종 이미지 저장
+        image.save(output_path)
+    else:
+        # 배경 제거가 필요하지 않은 경우, 리사이징된 이미지를 그대로 저장
+        resized_image.save(output_path)
 
 # Wav2Lip 코드
 parser = argparse.ArgumentParser(description='Inference code to lip-sync videos in the wild using Wav2Lip models')
@@ -305,7 +305,7 @@ def load_model(path):
 def main(face_path):
     global full_frames, mel_chunks, model, detector, predictions, boxes
     args.face = face_path
-    process_image(args.face, 'output.png', 350)
+    process_image(args.face, 'output.png', 250)
     args.face = 'output.png'
     if not os.path.isfile(args.face):
         raise ValueError('--face argument must be a valid path to video/image file')
