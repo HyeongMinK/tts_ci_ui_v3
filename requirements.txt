@@ -6,7 +6,6 @@ torchvision
 tqdm
 numba
 openai
-soxr
 gdown
 streamlit
 scipy
