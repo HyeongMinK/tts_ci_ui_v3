@@ -287,7 +287,7 @@ def _load(checkpoint_path):
                                 map_location=lambda storage, loc: storage)
     return checkpoint
 
-@st.cache_data
+@st.cache_resource
 def load_model():
     global model
     model = Wav2Lip()
