@@ -287,12 +287,12 @@ def _load(checkpoint_path):
                                 map_location=lambda storage, loc: storage)
     return checkpoint
 
-
-def load_model(path):
+@st.cache_resource
+def load_model():
     global model
     model = Wav2Lip()
-    print("Load checkpoint from: {}".format(path))
-    checkpoint = _load(path)
+    print("Load checkpoint from: {}".format('checkpoints/wav2lip.pth'))
+    checkpoint = _load('checkpoints/wav2lip.pth')
     s = checkpoint["state_dict"]
     new_s = {}
     for k, v in s.items():
@@ -382,7 +382,7 @@ def main(face_path):
         for i, (img_batch, mel_batch, frames, coords) in enumerate(tqdm(gen,
                                                                         total=int(np.ceil(float(len(mel_chunks)) / batch_size)))):
             if i == 0:
-                model = load_model(args.checkpoint_path)
+                model = load_model()
                 print("Model loaded")
 
                 frame_h, frame_w = full_frames[0].shape[:-1]
