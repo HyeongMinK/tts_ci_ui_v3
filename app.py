@@ -16,6 +16,10 @@ from PIL import Image
 import base64
 from rembg import remove
 import io
+import pixellib
+from pixellib.tune_bg import alter_bg
+
+
 
 
 if "choose_tp" not in st.session_state:
@@ -29,6 +33,12 @@ audio_ex_files = {
     "Nova": "audio_sample/nova.mp3",
     "Shimmer": "audio_sample/shimmer.mp3"
 }
+
+@st.cache_resource
+def load_model():
+    change_bg = alter_bg(model_type="pb")
+    change_bg.load_pascalvoc_model("xception_pascalvoc.pb")
+    return change_bg
 
 # 모델 체크포인트 다운로드 함수
 def download_checkpoint():
@@ -93,36 +103,32 @@ def resize_image_based_on_height(image, target_height):
 
     return resized_image  # 리사이징된 이미지를 반환
 
-# 이미지의 크기를 조정하고, 배경을 제거하는 함수
+# 이미지의 크기를 조정하고, 배경을 변경하는 함수
 def process_image(image_path, output_path, target_height):
     # 1단계: 이미지 리사이징
     image = Image.open(image_path)
     resized_image = resize_image_based_on_height(image, target_height)
-    
-    # 2단계: 배경 제거 (st.session_state.choose_tp가 True인 경우)
+
+    # 2단계: 배경 변경 (st.session_state.choose_tp가 True인 경우)
     if st.session_state.choose_tp:
         # 리사이징된 이미지를 메모리에 저장
         with io.BytesIO() as output:
             resized_image.save(output, format="PNG")
             input_data = output.getvalue()
-            output_data = remove(input_data)
 
-        # 바이트 데이터를 파일처럼 읽기
-        image = Image.open(io.BytesIO(output_data)).convert("RGBA")
+        # 배경 색상 변경을 위해 모델 로드
+        change_bg = load_model()
         
-        # 알파 채널 조정 (원하면 이 부분을 다시 활성화)
-        # pixels = image.load()
-        # width, height = image.size
-        # for y in range(height):
-        #     for x in range(width):
-        #         r, g, b, a = pixels[x, y]
-        #         if (r, g, b, a) != (0, 0, 0, 0):
-        #             pixels[x, y] = (r, g, b, 255)
+        # 배경 색상 변경
+        output_data = change_bg.color_bg(input_data, colors=(0, 128, 0))
+        
+        # 바이트 데이터를 파일처럼 읽기
+        image = Image.open(io.BytesIO(output_data)).convert("RGB")
 
         # 최종 이미지 저장
         image.save(output_path)
     else:
-        # 배경 제거가 필요하지 않은 경우, 리사이징된 이미지를 그대로 저장
+        # 배경 변경이 필요하지 않은 경우, 리사이징된 이미지를 그대로 저장
         resized_image.save(output_path)
 
 # Wav2Lip 코드
@@ -236,11 +242,8 @@ def datagen(frames, mels):
 
     for i, m in enumerate(mels):
         idx = 0 if args.static else i%len(frames)
-        if st.session_state.choose_tp:
-            frame_to_save = [cv2.imread(args.face, cv2.IMREAD_UNCHANGED)]
-            frame_to_save = frame_to_save[idx].copy()
-        else:
-            frame_to_save = frames[idx].copy()
+
+        frame_to_save = frames[idx].copy()
 
         face, coords = face_det_results[idx].copy()
 
@@ -401,50 +404,19 @@ def main(face_path):
             for p, f, c in zip(pred, frames, coords):
                 y1, y2, x1, x2 = c
                 p = cv2.resize(p.astype(np.uint8), (x2 - x1, y2 - y1))
-               
-  
-                if st.session_state.choose_tp:
-                    # f 배열의 해당 영역에서 알파 채널을 추출
-                    alpha_channel = f[y1:y2, x1:x2, 3]
-                    alpha_channel = cv2.resize(alpha_channel, (x2 - x1, y2 - y1))  # 알파 채널 크기 조정
 
-                    # p 배열에 알파 채널 추가하여 RGBA 형식으로 변환
-                    p_rgba = np.dstack((p, alpha_channel))
+                f[y1:y2, x1:x2] = p
+                out.write(f)
 
-                    # f 배열의 특정 영역을 p_rgba로 업데이트
-                    f[y1:y2, x1:x2] = p_rgba
-                    video_frames.append(f)
-                else:
-                    f[y1:y2, x1:x2] = p
-                    out.write(f)
-         
-        if st.session_state.choose_tp:
-            # 임시 디렉토리에 개별 프레임 저장
-            temp_dir = 'temp_frames'
-            os.makedirs(temp_dir, exist_ok=True) 
-            for idx, frame in enumerate(video_frames):
-                cv2.imwrite(f"{temp_dir}/frame_{idx:04d}.png", frame)
-
-            # ffmpeg 명령어로 프레임을 비디오로 변환 (Apple ProRes 4444 코덱 사용)
-            output_video_path = 'temp/result.mov'
-            command = f'ffmpeg -y -framerate {fps} -i {temp_dir}/frame_%04d.png -s {frame_w}x{frame_h} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le {output_video_path}'
-            subprocess.call(command, shell=True)
-
-        else:
-            out.release()
+        out.release()
 
         
         # 오디오 파일 이름을 기반으로 고유한 결과 파일 이름 생성
         audio_filename = os.path.splitext(os.path.basename(audio_file_path))[0]
 
-        if st.session_state.choose_tp:
-            result_filename = f'results/result_voice_{audio_filename}.mov'
-            command = f'ffmpeg -y -i {output_video_path} -i {audio_file_path} -c:v copy -c:a aac -strict experimental {result_filename}'
-            subprocess.call(command, shell=platform.system() != 'Windows')
-        else:
-            result_filename = f'results/result_voice_{audio_filename}.mp4'
-            command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
-            subprocess.call(command, shell=platform.system() != 'Windows')
+        result_filename = f'results/result_voice_{audio_filename}.mp4'
+        command = 'ffmpeg -y -i {} -i {} -strict -2 -q:v 1 {}'.format(audio_file_path, 'temp/result.avi', result_filename)
+        subprocess.call(command, shell=platform.system() != 'Windows')
 
         result_filenames.append(result_filename)
 

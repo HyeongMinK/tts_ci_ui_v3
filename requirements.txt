@@ -13,3 +13,5 @@ pillow
 imageio
 imageio[ffmpeg]
 rembg
+tensorflow
+pixellib
