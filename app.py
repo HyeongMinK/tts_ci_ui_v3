@@ -184,7 +184,7 @@ def get_smoothened_boxes(boxes, T):
 
 def face_detect(images):
     detector = face_detection.FaceAlignment(face_detection.LandmarksType._2D, 
-                                            flip_input=False, device=device)
+                                            flip_input=False, device='cpu')
 
     batch_size = args.face_det_batch_size
     
@@ -275,7 +275,7 @@ def datagen(frames, mels):
         yield img_batch, mel_batch, frame_batch, coords_batch
 
 mel_step_size = 16
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'mps' if torch.cuda.is_available() else 'cpu'
 
 
 
@@ -287,7 +287,7 @@ def _load(checkpoint_path):
                                 map_location=lambda storage, loc: storage)
     return checkpoint
 
-@st.cache_data
+@st.cache_resource
 def load_model():
     global model
     model = Wav2Lip()
